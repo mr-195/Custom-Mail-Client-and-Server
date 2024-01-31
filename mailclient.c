@@ -13,6 +13,28 @@
 #define SMTP_PORT 25
 #define MAX_BUFFER_SIZE 1024
 
+int isvalidmail(char from_line[], char to_line[], char subject_line[])
+{
+     if (strncmp(from_line, "From:", 5) != 0 || strncmp(to_line, "To:", 3) != 0 || strncmp(subject_line, "Subject:", 8) != 0){
+        printf("Incorrect Format \n");
+        return 0;
+    }
+    // Check the presence of '@' in the "From" line
+    char *from_at_symbol = strchr(from_line, '@');
+    if (from_at_symbol == NULL) {
+        printf("Incorrect Format \n");
+        return 0;
+    }
+
+    // Check the presence of '@' in the "To" line
+    char *to_at_symbol = strchr(to_line, '@');
+    if (to_at_symbol == NULL) {
+        printf("Incorrect Format \n");
+        return 0;
+    }
+
+    return 1;
+}
 int main(int argc, char *argv[])
 {
     // the program takes 3 command line arguments
@@ -55,53 +77,38 @@ int main(int argc, char *argv[])
         scanf("%d", &option);
         if (option == 1)
         {
-            // manage mail
-            // send username and password to server
-            send(sockfd, username, strlen(username), 0);
-            send(sockfd, password, strlen(password), 0);
-            // receive number of mails
-            int num_mails;
-            recv(sockfd, &num_mails, sizeof(num_mails), 0);
-            printf("Number of mails: %d\n", num_mails);
-            // receive mails
-            for (int i = 0; i < num_mails; i++)
-            {
-                // receive mail
-                char mail[1000];
-                recv(sockfd, mail, sizeof(mail), 0);
-                printf("Mail %d:\n", i + 1);
-                printf("%s\n", mail);
-            }
         }
         else if (option == 2)
         {
             // connect to server
             connect(sockfd, (struct sockaddr *)&serv_addr,
                     sizeof(serv_addr));
-            // use SMTP protocol to send mail
-            char mail [MAX_BUFFER_SIZE];
-            char line [MAX_BUFFER_SIZE];
-            // get mail details from user 
-            fgets(mail,sizeof(mail), stdin);
-            // check format of mail
-            if(!isvalidmail(mail)){
+
+            char from_line[100];
+            char to_line[100];
+            char subject_line[100];
+            char message_lines[4][100]; // Assuming a maximum of 4 lines for the message
+            // take input from line
+            fgets(from_line, sizeof(from_line), stdin);
+            // take input to line
+            fgets(to_line, sizeof(to_line), stdin);
+            // take input subject line
+            fgets(subject_line, sizeof(subject_line), stdin);
+            // take input message
+            for (int i = 0; i < 4; ++i)
+            {
+                fgets(message_lines[i], sizeof(message_lines[i]), stdin);
+            }
+            // check for format of mail
+            int valid = isvalidmail(from_line, to_line, subject_line);
+
+            if(valid == 0)
+            {
                 printf("Invalid mail format\n");
                 continue;
             }
-            else{
-                // write to server 
-                char *msg = "client connects to SMTP port>\n";
-                write(sockfd, msg, strlen(msg));
-                // read from server
-                read(sockfd, line, sizeof(line));
-                printf("%s\n", line);
-                // wrtie HELO domain
-                char *helo = "HELO iitkgp.edu\n";
-                write(sockfd, helo, strlen(helo));
+            // format is correct 
 
-            }
-
-            
         }
         else if (option == 3)
         {
@@ -116,3 +123,4 @@ int main(int argc, char *argv[])
     close(sockfd);
     return 0;
 }
+
