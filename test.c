@@ -24,6 +24,9 @@ int main() {
     for (int i = 0; i < 4; ++i) {
         printf("Line %d: ", i + 1);
         fgets(message_lines[i], sizeof(message_lines[i]), stdin);
+        if(strcmp(message_lines[i], ".\n") == 0) {
+            break;
+        }
     }
 
     // Display the user's input
@@ -37,34 +40,24 @@ int main() {
     }
 
     // Check if the "From" line is valid
-    if (strncmp(from_line, "From:", 5) != 0) {
-        printf("Invalid from line\n");
+   if (strncmp(from_line, "From:", 5) != 0 || strncmp(to_line, "To:", 3) != 0 || strncmp(subject_line, "Subject:", 8) != 0)
+    {
+        printf("Incorrect Format \n");
         return 0;
     }
-
-    // Check if the "To" line is valid
-    if (strncmp(to_line, "To:", 3) != 0) {
-        printf("Invalid to line\n");
-        return 0;
-    }
-
-    // Check if the "Subject" line is valid
-    if (strncmp(subject_line, "Subject:", 8) != 0) {
-        printf("Invalid subject line\n");
-        return 0;
-    }
-
     // Check the presence of '@' in the "From" line
     char *from_at_symbol = strchr(from_line, '@');
-    if (from_at_symbol == NULL) {
-        printf("Invalid email format in the 'From' line.\n");
+    if (from_at_symbol == NULL)
+    {
+        printf("Incorrect Format \n");
         return 0;
     }
 
     // Check the presence of '@' in the "To" line
     char *to_at_symbol = strchr(to_line, '@');
-    if (to_at_symbol == NULL) {
-        printf("Invalid email format in the 'To' line.\n");
+    if (to_at_symbol == NULL)
+    {
+        printf("Incorrect Format \n");
         return 0;
     }
 

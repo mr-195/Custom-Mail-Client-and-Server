@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
-
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
@@ -17,7 +15,10 @@
 
 int isvalidmail(char from_line[], char to_line[], char subject_line[])
 {
-    if (strncmp(from_line, "From:", 5) != 0 || strncmp(to_line, "To:", 3) != 0 || strncmp(subject_line, "Subject:", 8) != 0)
+    printf("%s\n", from_line);
+    printf("%s\n", to_line);
+    printf("%s\n", subject_line);
+    if (strncmp(from_line, "From:", 5) != 0 || strncmp(to_line, "To:", 3) != 0)
     {
         printf("Incorrect Format \n");
         return 0;
@@ -39,6 +40,12 @@ int isvalidmail(char from_line[], char to_line[], char subject_line[])
     }
 
     return 1;
+}
+void clearInputBuffer()
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF)
+        ;
 }
 int main(int argc, char *argv[])
 {
@@ -80,6 +87,7 @@ int main(int argc, char *argv[])
         printf("3. Quit\n");
         int option;
         scanf("%d", &option);
+
         if (option == 1)
         {
         }
@@ -88,60 +96,81 @@ int main(int argc, char *argv[])
             // connect to server
             connect(sockfd, (struct sockaddr *)&serv_addr,
                     sizeof(serv_addr));
-
+            clearInputBuffer();
             char from_line[100];
             char to_line[100];
             char subject_line[100];
-            char message_lines[4][100]; // Assuming a maximum of 4 lines for the message
+            char message_lines[100][100]; // Assuming a maximum of 4 lines for the message
+
             // take input from line
             fgets(from_line, sizeof(from_line), stdin);
+            // printf("%s\n", from_line);
+
             // take input to line
+            // clearInputBuffer();
             fgets(to_line, sizeof(to_line), stdin);
+            // printf("%s\n", to_line);
+
             // take input subject line
+            // clearInputBuffer();
             fgets(subject_line, sizeof(subject_line), stdin);
+            // printf("%s\n", subject_line);
+
             // take input message which ends with a single dot
+            // clearInputBuffer();
             for (int i = 0; i < 10; ++i)
             {
                 fgets(message_lines[i], sizeof(message_lines[i]), stdin);
                 if (strcmp(message_lines[i], ".\n") == 0)
                     break;
             }
-            // check for format of mail
-            int valid = isvalidmail(from_line, to_line, subject_line);
 
-            if (valid == 0)
-            {
-                printf("Invalid mail format\n");
-                continue;
-            }
+            printf("You entered:\n");
+            // check for format of mail
+            // int valid = isvalidmail(from_line, to_line, subject_line);
+
+            // if (valid == 0)
+            // {
+            //     printf("Invalid mail format\n");
+            //     continue;
+            // }
             // format is correct
             // recieve service ready message
             char buffer[MAX_BUFFER_SIZE];
-            char msg[MAX_BUFFER_SIZE];
-            memset(buffer, 0, sizeof(buffer));
+            char msg[10 * MAX_BUFFER_SIZE];
+            memset(msg, '\0', sizeof(msg));
+
             while (1)
             {
-                memset(buffer, 0, sizeof(buffer));
-                int n = recv(sockfd, buffer, sizeof(buffer), 0);
-                // break when EOF is reached
+                memset(buffer, '\0', sizeof(buffer));
+                int n = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+
                 if (n == 0)
-                    break;
-                if (n < 0)
                 {
-                    perror("Error in receiving\n");
+                    break; // Connection closed by the remote peer
+                }
+                else if (n < 0)
+                {
+                    perror("Error in receiving");
                     exit(1);
                 }
-                if (n >= 2 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
+
+                printf("Received: %s\n", buffer);
+
+                // Check for the end of a line (CRLF)
+                if (strchr(buffer, '\r') && strchr(buffer, '\n'))
                 {
-                    buffer[n - 1] = '\0';
+                    printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
+
                 strcat(msg, buffer);
             }
+
             printf("%s\n", msg);
             // check for 220 <iitkgp.edu> Service ready
-            if (strcmp(msg, "220 iitkgp.edu Service ready") != 0)
+            if (strcmp(msg, "220 iitkgp.edu Service ready\r\n") != 0)
             {
                 printf("Error in connecting to server\n");
                 continue;
@@ -153,25 +182,32 @@ int main(int argc, char *argv[])
             strcat(helo, "\r\n");
             send(sockfd, helo, strlen(helo), 0);
             // receive acknowkledgement from server "250 OK domain name"
-
+            memset(msg, '\0', sizeof(msg));
             while (1)
             {
-                memset(buffer, 0, sizeof(buffer));
-                int n = recv(sockfd, buffer, sizeof(buffer), 0);
-                // break when EOF is reached
+                memset(buffer, '\0', sizeof(buffer));
+                int n = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+
                 if (n == 0)
-                    break;
-                if (n < 0)
                 {
-                    perror("Error in receiving\n");
+                    break; // Connection closed by the remote peer
+                }
+                else if (n < 0)
+                {
+                    perror("Error in receiving");
                     exit(1);
                 }
-                if (n > 1 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
+
+                printf("Received: %s\n", buffer);
+
+                // Check for the end of a line (CRLF)
+                if (strstr(buffer, "\r\n") != NULL)
                 {
-                    buffer[n - 1] = '\0';
+                    printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
+
                 strcat(msg, buffer);
             }
             printf("%s\n", msg);
@@ -186,31 +222,39 @@ int main(int argc, char *argv[])
             strcpy(mail_from, "MAIL ");
             strcat(mail_from, from_line);
             strcat(mail_from, "\r\n");
+            printf("%s\n", mail_from);
             send(sockfd, mail_from, strlen(mail_from), 0);
             // receive acknowkledgement from server 250 from_line ... Sender Ok
-            memset(buffer, 0, sizeof(buffer));
-            memset(msg, 0, sizeof(msg));
+            memset(buffer, '\0', sizeof(buffer));
+            memset(msg, '\0', sizeof(msg));
             while (1)
             {
-                memset(buffer, 0, sizeof(buffer));
+                memset(buffer, '\0', sizeof(buffer));
                 int n = recv(sockfd, buffer, sizeof(buffer), 0);
                 // break when EOF is reached
                 if (n == 0)
-                    break;
-                if (n < 0)
                 {
-                    perror("Error in receiving\n");
+                    break; // Connection closed by the remote peer
+                }
+                else if (n < 0)
+                {
+                    perror("Error in receiving");
                     exit(1);
                 }
-                if (n > 1 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
+
+                printf("Received: %s\n", buffer);
+
+                // Check for the end of a line (CRLF)
+                if (strstr(buffer, "\r\n") != NULL)
                 {
-                    buffer[n - 1] = '\0';
+                    printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
+
                 strcat(msg, buffer);
             }
-            printf("%s\n", msg);
+            printf("%s\n", msg); //
             // check for 250
             if (strncmp(msg, "250", 3) != 0)
             {
@@ -224,26 +268,33 @@ int main(int argc, char *argv[])
             strcat(rcpt_to, "\r\n");
             send(sockfd, rcpt_to, strlen(rcpt_to), 0);
             // receive acknowkledgement from server 250 to_line ... Recipient Ok
-            memset(buffer, 0, sizeof(buffer));
-            memset(msg, 0, sizeof(msg));
+            memset(buffer, '\0', sizeof(buffer));
+            memset(msg, '\0', sizeof(msg));
             while (1)
             {
-                memset(buffer, 0, sizeof(buffer));
+                memset(buffer, '\0', sizeof(buffer));
                 int n = recv(sockfd, buffer, sizeof(buffer), 0);
                 // break when EOF is reached
                 if (n == 0)
-                    break;
-                if (n < 0)
                 {
-                    perror("Error in receiving\n");
+                    break; // Connection closed by the remote peer
+                }
+                else if (n < 0)
+                {
+                    perror("Error in receiving");
                     exit(1);
                 }
-                if (n > 1 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
+
+                printf("Received: %s\n", buffer);
+
+                // Check for the end of a line (CRLF)
+                if (strstr(buffer, "\r\n") != NULL)
                 {
-                    buffer[n - 1] = '\0';
+                    printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
+
                 strcat(msg, buffer);
             }
             printf("%s\n", msg);
@@ -256,27 +307,35 @@ int main(int argc, char *argv[])
             // send DATA
             send(sockfd, "DATA\r\n", strlen("DATA\r\n"), 0);
             // receive acknowkledgement from server 354 Start mail input; end with <CRLF>.<CRLF>
-            memset(buffer, 0, sizeof(buffer));
-            memset(msg, 0, sizeof(msg));
+            memset(buffer,'\0', sizeof(buffer));
+            memset(msg,'\0', sizeof(msg));
             while (1)
             {
-                memset(buffer, 0, sizeof(buffer));
+                memset(buffer,'\0', sizeof(buffer));
                 int n = recv(sockfd, buffer, sizeof(buffer), 0);
                 // break when EOF is reached
                 if (n == 0)
-                    break;
-                if (n < 0)
                 {
-                    perror("Error in receiving\n");
+                    break; // Connection closed by the remote peer
+                }
+                else if (n < 0)
+                {
+                    perror("Error in receiving");
                     exit(1);
                 }
-                if (n > 1 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
+
+                printf("Received: %s\n", buffer);
+
+                // Check for the end of a line (CRLF)
+                if (strstr(buffer, "\r\n") != NULL)
                 {
-                    buffer[n - 1] = '\0';
+                    printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
+
                 strcat(msg, buffer);
+               
             }
             printf("%s\n", msg);
             // check for 354
