@@ -9,6 +9,10 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+
+#include <sys/types.h>
+
+
 #define SMTP_SERVER "iitkgp.edu"
 #define SMTP_PORT 25
 #define MAX_BUFFER_SIZE 1024
