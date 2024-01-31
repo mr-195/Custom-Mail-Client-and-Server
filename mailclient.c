@@ -108,6 +108,34 @@ int main(int argc, char *argv[])
                 continue;
             }
             // format is correct 
+            // send HELO domain name
+            char helo[100];
+            strcpy(helo, "HELO ");
+            strcat(helo, SMTP_SERVER);
+            strcat(helo, "\r\n");
+            send(sockfd, helo, strlen(helo), 0);
+            // receive acknowkledgement from server "250 OK domain name"
+            char buffer[MAX_BUFFER_SIZE];
+            char msg [MAX_BUFFER_SIZE];
+            while(1)
+            {
+                memset(buffer, 0, sizeof(buffer));
+                int n=recv(sockfd, buffer, sizeof(buffer), 0);
+                // concatenate all the messages
+                if(n==0)
+                {
+                    break;
+                }
+                strcat(msg, buffer);
+            }
+            printf("%s\n", msg);
+            // check for 250 OK
+            if(strncmp(msg, "250 OK",6) != 0)
+            {
+                printf("Error in HELO\n");
+                continue;
+            }
+
 
         }
         else if (option == 3)
