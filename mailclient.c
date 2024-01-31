@@ -121,9 +121,18 @@ int main(int argc, char *argv[])
             {
                 memset(buffer, 0, sizeof(buffer));
                 int n=recv(sockfd, buffer, sizeof(buffer), 0);
-                // concatenate all the messages
+                // break when EOF is reached
                 if(n==0)
+                    break;
+                if(n<0)
                 {
+                    perror("Error in receiving\n");
+                    exit(1);
+                }
+                if( n>1 && buffer[n-1]=='\n')
+                {
+                    buffer[n-1]='\0';
+                    strcat(msg, buffer);
                     break;
                 }
                 strcat(msg, buffer);
