@@ -15,20 +15,23 @@
 
 int isvalidmail(char from_line[], char to_line[], char subject_line[])
 {
-     if (strncmp(from_line, "From:", 5) != 0 || strncmp(to_line, "To:", 3) != 0 || strncmp(subject_line, "Subject:", 8) != 0){
+    if (strncmp(from_line, "From:", 5) != 0 || strncmp(to_line, "To:", 3) != 0 || strncmp(subject_line, "Subject:", 8) != 0)
+    {
         printf("Incorrect Format \n");
         return 0;
     }
     // Check the presence of '@' in the "From" line
     char *from_at_symbol = strchr(from_line, '@');
-    if (from_at_symbol == NULL) {
+    if (from_at_symbol == NULL)
+    {
         printf("Incorrect Format \n");
         return 0;
     }
 
     // Check the presence of '@' in the "To" line
     char *to_at_symbol = strchr(to_line, '@');
-    if (to_at_symbol == NULL) {
+    if (to_at_symbol == NULL)
+    {
         printf("Incorrect Format \n");
         return 0;
     }
@@ -102,12 +105,12 @@ int main(int argc, char *argv[])
             // check for format of mail
             int valid = isvalidmail(from_line, to_line, subject_line);
 
-            if(valid == 0)
+            if (valid == 0)
             {
                 printf("Invalid mail format\n");
                 continue;
             }
-            // format is correct 
+            // format is correct
             // send HELO domain name
             char helo[100];
             strcpy(helo, "HELO ");
@@ -116,22 +119,22 @@ int main(int argc, char *argv[])
             send(sockfd, helo, strlen(helo), 0);
             // receive acknowkledgement from server "250 OK domain name"
             char buffer[MAX_BUFFER_SIZE];
-            char msg [MAX_BUFFER_SIZE];
-            while(1)
+            char msg[MAX_BUFFER_SIZE];
+            while (1)
             {
                 memset(buffer, 0, sizeof(buffer));
-                int n=recv(sockfd, buffer, sizeof(buffer), 0);
+                int n = recv(sockfd, buffer, sizeof(buffer), 0);
                 // break when EOF is reached
-                if(n==0)
+                if (n == 0)
                     break;
-                if(n<0)
+                if (n < 0)
                 {
                     perror("Error in receiving\n");
                     exit(1);
                 }
-                if( n>1 && buffer[n-1]=='\n')
+                if (n > 1 && buffer[n - 1] == '\n')
                 {
-                    buffer[n-1]='\0';
+                    buffer[n - 1] = '\0';
                     strcat(msg, buffer);
                     break;
                 }
@@ -139,13 +142,42 @@ int main(int argc, char *argv[])
             }
             printf("%s\n", msg);
             // check for 250 OK
-            if(strncmp(msg, "250 OK",6) != 0)
+            if (strncmp(msg, "250 OK", 6) != 0)
             {
                 printf("Error in HELO\n");
                 continue;
             }
-
-
+            // send MAIL+ from_line
+            char mail_from[100];
+            strcpy(mail_from, "MAIL ");
+            strcat(mail_from, from_line);
+            strcat(mail_from, "\r\n");
+            send(sockfd, mail_from, strlen(mail_from), 0);
+            // receive acknowkledgement from server 250 from_line ... Sender Ok
+            memset(buffer, 0, sizeof(buffer));
+            memset(msg, 0, sizeof(msg));
+            while (1)
+            {
+                memset(buffer, 0, sizeof(buffer));
+                int n = recv(sockfd, buffer, sizeof(buffer), 0);
+                // break when EOF is reached
+                if (n == 0)
+                    break;
+                if (n < 0)
+                {
+                    perror("Error in receiving\n");
+                    exit(1);
+                }
+                if (n > 1 && buffer[n - 1] == '\n')
+                {
+                    buffer[n - 1] = '\0';
+                    strcat(msg, buffer);
+                    break;
+                }
+                strcat(msg, buffer);
+            }
+            printf("%s\n", msg);
+            // check for 250 OK
         }
         else if (option == 3)
         {
@@ -160,4 +192,3 @@ int main(int argc, char *argv[])
     close(sockfd);
     return 0;
 }
-
