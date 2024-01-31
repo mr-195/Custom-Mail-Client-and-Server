@@ -15,20 +15,23 @@
 
 int isvalidmail(char from_line[], char to_line[], char subject_line[])
 {
-     if (strncmp(from_line, "From:", 5) != 0 || strncmp(to_line, "To:", 3) != 0 || strncmp(subject_line, "Subject:", 8) != 0){
+    if (strncmp(from_line, "From:", 5) != 0 || strncmp(to_line, "To:", 3) != 0 || strncmp(subject_line, "Subject:", 8) != 0)
+    {
         printf("Incorrect Format \n");
         return 0;
     }
     // Check the presence of '@' in the "From" line
     char *from_at_symbol = strchr(from_line, '@');
-    if (from_at_symbol == NULL) {
+    if (from_at_symbol == NULL)
+    {
         printf("Incorrect Format \n");
         return 0;
     }
 
     // Check the presence of '@' in the "To" line
     char *to_at_symbol = strchr(to_line, '@');
-    if (to_at_symbol == NULL) {
+    if (to_at_symbol == NULL)
+    {
         printf("Incorrect Format \n");
         return 0;
     }
@@ -94,20 +97,53 @@ int main(int argc, char *argv[])
             fgets(to_line, sizeof(to_line), stdin);
             // take input subject line
             fgets(subject_line, sizeof(subject_line), stdin);
-            // take input message
-            for (int i = 0; i < 4; ++i)
+            // take input message which ends with a single dot
+            for (int i = 0; i < 10; ++i)
             {
                 fgets(message_lines[i], sizeof(message_lines[i]), stdin);
+                if (strcmp(message_lines[i], ".\n") == 0)
+                    break;
             }
             // check for format of mail
             int valid = isvalidmail(from_line, to_line, subject_line);
 
-            if(valid == 0)
+            if (valid == 0)
             {
                 printf("Invalid mail format\n");
                 continue;
             }
-            // format is correct 
+            // format is correct
+            // recieve service ready message
+            char buffer[MAX_BUFFER_SIZE];
+            char msg[MAX_BUFFER_SIZE];
+            memset(buffer, 0, sizeof(buffer));
+            while (1)
+            {
+                memset(buffer, 0, sizeof(buffer));
+                int n = recv(sockfd, buffer, sizeof(buffer), 0);
+                // break when EOF is reached
+                if (n == 0)
+                    break;
+                if (n < 0)
+                {
+                    perror("Error in receiving\n");
+                    exit(1);
+                }
+                if (n >= 2 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
+                {
+                    buffer[n - 1] = '\0';
+                    strcat(msg, buffer);
+                    break;
+                }
+                strcat(msg, buffer);
+            }
+            printf("%s\n", msg);
+            // check for 220 <iitkgp.edu> Service ready
+            if (strcmp(msg, "220 iitkgp.edu Service ready") != 0)
+            {
+                printf("Error in connecting to server\n");
+                continue;
+            }
             // send HELO domain name
             char helo[100];
             strcpy(helo, "HELO ");
@@ -115,23 +151,22 @@ int main(int argc, char *argv[])
             strcat(helo, "\r\n");
             send(sockfd, helo, strlen(helo), 0);
             // receive acknowkledgement from server "250 OK domain name"
-            char buffer[MAX_BUFFER_SIZE];
-            char msg [MAX_BUFFER_SIZE];
-            while(1)
+
+            while (1)
             {
                 memset(buffer, 0, sizeof(buffer));
-                int n=recv(sockfd, buffer, sizeof(buffer), 0);
+                int n = recv(sockfd, buffer, sizeof(buffer), 0);
                 // break when EOF is reached
-                if(n==0)
+                if (n == 0)
                     break;
-                if(n<0)
+                if (n < 0)
                 {
                     perror("Error in receiving\n");
                     exit(1);
                 }
-                if( n>1 && buffer[n-1]=='\n')
+                if (n > 1 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
                 {
-                    buffer[n-1]='\0';
+                    buffer[n - 1] = '\0';
                     strcat(msg, buffer);
                     break;
                 }
@@ -139,13 +174,164 @@ int main(int argc, char *argv[])
             }
             printf("%s\n", msg);
             // check for 250 OK
-            if(strncmp(msg, "250 OK",6) != 0)
+            if (strncmp(msg, "250 OK", 6) != 0)
             {
                 printf("Error in HELO\n");
                 continue;
             }
-
-
+            // send MAIL+ from_line
+            char mail_from[100];
+            strcpy(mail_from, "MAIL ");
+            strcat(mail_from, from_line);
+            strcat(mail_from, "\r\n");
+            send(sockfd, mail_from, strlen(mail_from), 0);
+            // receive acknowkledgement from server 250 from_line ... Sender Ok
+            memset(buffer, 0, sizeof(buffer));
+            memset(msg, 0, sizeof(msg));
+            while (1)
+            {
+                memset(buffer, 0, sizeof(buffer));
+                int n = recv(sockfd, buffer, sizeof(buffer), 0);
+                // break when EOF is reached
+                if (n == 0)
+                    break;
+                if (n < 0)
+                {
+                    perror("Error in receiving\n");
+                    exit(1);
+                }
+                if (n > 1 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
+                {
+                    buffer[n - 1] = '\0';
+                    strcat(msg, buffer);
+                    break;
+                }
+                strcat(msg, buffer);
+            }
+            printf("%s\n", msg);
+            // check for 250
+            if (strncmp(msg, "250", 3) != 0)
+            {
+                printf("Error in MAIL\n");
+                continue;
+            }
+            // send RCPT+ to_line
+            char rcpt_to[100];
+            strcpy(rcpt_to, "RCPT ");
+            strcat(rcpt_to, to_line);
+            strcat(rcpt_to, "\r\n");
+            send(sockfd, rcpt_to, strlen(rcpt_to), 0);
+            // receive acknowkledgement from server 250 to_line ... Recipient Ok
+            memset(buffer, 0, sizeof(buffer));
+            memset(msg, 0, sizeof(msg));
+            while (1)
+            {
+                memset(buffer, 0, sizeof(buffer));
+                int n = recv(sockfd, buffer, sizeof(buffer), 0);
+                // break when EOF is reached
+                if (n == 0)
+                    break;
+                if (n < 0)
+                {
+                    perror("Error in receiving\n");
+                    exit(1);
+                }
+                if (n > 1 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
+                {
+                    buffer[n - 1] = '\0';
+                    strcat(msg, buffer);
+                    break;
+                }
+                strcat(msg, buffer);
+            }
+            printf("%s\n", msg);
+            // check for 250
+            if (strncmp(msg, "250", 3) != 0)
+            {
+                printf("Error in RCPT\n");
+                continue;
+            }
+            // send DATA
+            send(sockfd, "DATA\r\n", strlen("DATA\r\n"), 0);
+            // receive acknowkledgement from server 354 Start mail input; end with <CRLF>.<CRLF>
+            memset(buffer, 0, sizeof(buffer));
+            memset(msg, 0, sizeof(msg));
+            while (1)
+            {
+                memset(buffer, 0, sizeof(buffer));
+                int n = recv(sockfd, buffer, sizeof(buffer), 0);
+                // break when EOF is reached
+                if (n == 0)
+                    break;
+                if (n < 0)
+                {
+                    perror("Error in receiving\n");
+                    exit(1);
+                }
+                if (n > 1 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
+                {
+                    buffer[n - 1] = '\0';
+                    strcat(msg, buffer);
+                    break;
+                }
+                strcat(msg, buffer);
+            }
+            printf("%s\n", msg);
+            // check for 354
+            if (strncmp(msg, "354", 3) != 0)
+            {
+                printf("Error in DATA\n");
+                continue;
+            }
+            // send from_line
+            send(sockfd, from_line, strlen(from_line), 0);
+            // send to_line
+            send(sockfd, to_line, strlen(to_line), 0);
+            // send subject_line
+            send(sockfd, subject_line, strlen(subject_line), 0);
+            // send message_lines
+            for (int i = 0; i < 10; ++i)
+            {
+                send(sockfd, message_lines[i], strlen(message_lines[i]), 0);
+                if (strcmp(message_lines[i], ".\n") == 0)
+                    break;
+            }
+            // receive acknowkledgement from server 250 OK Message accepted for delivery
+            memset(buffer, 0, sizeof(buffer));
+            memset(msg, 0, sizeof(msg));
+            while (1)
+            {
+                memset(buffer, 0, sizeof(buffer));
+                int n = recv(sockfd, buffer, sizeof(buffer), 0);
+                // break when EOF is reached
+                if (n == 0)
+                    break;
+                if (n < 0)
+                {
+                    perror("Error in receiving\n");
+                    exit(1);
+                }
+                if (n > 1 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
+                {
+                    buffer[n - 1] = '\0';
+                    strcat(msg, buffer);
+                    break;
+                }
+                strcat(msg, buffer);
+            }
+            printf("%s\n", msg);
+            // check for 250
+            if (strcmp(msg, "250 OK Message accepted for delivery") != 0)
+            {
+                printf("Error in sending mail\n");
+                continue;
+            }
+            else
+            {
+                printf("Mail sent successfully\n");
+            }
+            // send QUIT
+            send(sockfd, "QUIT\r\n", strlen("QUIT\r\n"), 0);
         }
         else if (option == 3)
         {
@@ -160,4 +346,3 @@ int main(int argc, char *argv[])
     close(sockfd);
     return 0;
 }
-
