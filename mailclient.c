@@ -9,6 +9,10 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+
+#include <sys/types.h>
+
+
 #define SMTP_SERVER "iitkgp.edu"
 #define SMTP_PORT 25
 #define MAX_BUFFER_SIZE 1024
@@ -321,7 +325,7 @@ int main(int argc, char *argv[])
             }
             printf("%s\n", msg);
             // check for 250
-            if (strcmp(msg, "250 OK Message accepted for delivery") != 0)
+            if (strcmp(msg, "250 OK Message accepted for delivery\r\n") != 0)
             {
                 printf("Error in sending mail\n");
                 continue;
