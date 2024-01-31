@@ -8,14 +8,19 @@
 #define PORTNO 1234
 
 void handleClient(int clientSocket);
+void handleMsg(int clientSocket);
 
-int main() {
+
+
+int main()
+{
     int serverSocket, clientSocket;
     struct sockaddr_in serverAddr, clientAddr;
     socklen_t clientAddrLen, Len = sizeof(clientAddr);
 
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocket == -1) {
+    if (serverSocket == -1)
+    {
         perror("Error creating socket");
         exit(EXIT_FAILURE);
     }
@@ -25,26 +30,31 @@ int main() {
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     serverAddr.sin_port = htons(PORTNO);
 
-    if (bind(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
+    if (bind(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
+    {
         perror("Error binding socket");
         exit(EXIT_FAILURE);
     }
 
-    if (listen(serverSocket, 5) == -1) {
+    if (listen(serverSocket, 5) == -1)
+    {
         perror("Error listening on socket");
         exit(EXIT_FAILURE);
     }
 
     printf("SMTP Service Ready iitkgp.edu\n");
 
-    while (1) {
+    while (1)
+    {
         clientSocket = accept(serverSocket, (struct sockaddr *)&clientAddr, &clientAddrLen);
-        if (clientSocket == -1) {
+        if (clientSocket == -1)
+        {
             perror("Error accepting connection");
             continue;
         }
 
-        if (fork() == 0) {
+        if (fork() == 0)
+        {
             close(serverSocket);
             handleClient(clientSocket);
             close(clientSocket);
@@ -59,36 +69,91 @@ int main() {
     return 0;
 }
 
-void handleClient(int clientSocket) {
+
+
+
+
+
+void handleClient(int clientSocket)
+{
+    // char buffer[MAX_BUFFER_SIZE];
+    // memset(buffer, 0, sizeof(buffer));
+    // char msg[1000];
+    send(clientSocket, "220 iitkgp.edu Service ready\r\n", 29, 0);
+    // memset(buffer, 0, sizeof(buffer));
+    // memset(msg, 0, sizeof(msg));
     char buffer[MAX_BUFFER_SIZE];
+    char msg[MAX_BUFFER_SIZE];
     memset(buffer, 0, sizeof(buffer));
+    while (1)
+    {
+        memset(buffer, 0, sizeof(buffer));
+        int n = recv(clientSocket, buffer, sizeof(buffer), 0);
+        // break when EOF is reached
+        if (n == 0)
+            break;
+        if (n < 0)
+        {
+            perror("Error in receiving\n");
+            exit(1);
+        }
+        if (n >= 2 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
+        {
+            buffer[n - 1] = '\0';
+            strcat(msg, buffer);
+            break;
+        }
+        strcat(msg, buffer);
+    }
+    printf("%s\n", msg);
+    if (strncmp(msg, "HELO", 4) == 0)
+    {
+        send(clientSocket, "250 OK Hello iitkgp.edu\r\n", 24, 0);
+    }
+    else
+    {
+        send(clientSocket, "500 Error: bad syntax\r\n", 23, 0);
+        exit(EXIT_SUCCESS);
+    }
 
-    send(clientSocket, "220 iitkgp.edu Service ready\n", 29, 0);
 
-    while (1) {
+
+    while (1)
+    {
         recv(clientSocket, buffer, MAX_BUFFER_SIZE, 0);
         printf("C: %s", buffer);
 
-        if (strncmp(buffer, "HELO", 4) == 0) {
-            send(clientSocket, "250 OK Hello iitkgp.edu\n", 24, 0);
-        } else if (strncmp(buffer, "MAIL FROM:", 10) == 0) {
-            send(clientSocket, "250 Sender ok\n", 15, 0);
-        } else if (strncmp(buffer, "RCPT TO:", 8) == 0) {
-            send(clientSocket, "250 Recipient ok\n", 18, 0);
-        } else if (strncmp(buffer, "DATA", 4) == 0) {
-            send(clientSocket, "354 Enter mail, end with \".\" on a line by itself\n", 50, 0);
+        if (strncmp(buffer, "HELO", 4) == 0)
+        {
+            send(clientSocket, "250 OK Hello iitkgp.edu\r\n", 24, 0);
+        }
+        else if (strncmp(buffer, "MAIL FROM:", 10) == 0)
+        {
+            send(clientSocket, "250 Sender ok\r\n", 15, 0);
+        }
+        else if (strncmp(buffer, "RCPT TO:", 8) == 0)
+        {
+            send(clientSocket, "250 Recipient ok\r\n", 18, 0);
+        }
+        else if (strncmp(buffer, "DATA", 4) == 0)
+        {
+            send(clientSocket, "354 Enter mail, end with \".\" on a line by itself\r\n", 50, 0);
 
-            while (1) {
+            while (1)
+            {
                 recv(clientSocket, buffer, MAX_BUFFER_SIZE, 0);
                 printf("C: %s", buffer);
 
-                if (strncmp(buffer, ".", 1) == 0) {
-                    send(clientSocket, "250 OK Message accepted for delivery\n", 38, 0);
+                if (strncmp(buffer, ".", 1) == 0)
+                {
+                    send(clientSocket, "250 OK Message accepted for delivery\r\n", 38, 0);
                     break;
                 }
             }
-        } else if (strncmp(buffer, "QUIT", 4) == 0) {
-            send(clientSocket, "221 iitkgp.edu closing connection\n", 36, 0);
+        }
+        else if (strncmp(buffer, "QUIT", 4) == 0)
+        {
+            send(clientSocket, "221 iitkgp.edu closing connection\r\n", 36, 0);
             break;
         }
 
