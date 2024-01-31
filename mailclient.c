@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
             for (int i = 0; i < 10; ++i)
             {
                 fgets(message_lines[i], sizeof(message_lines[i]), stdin);
-                if(strcmp(message_lines[i], ".\n") == 0)
+                if (strcmp(message_lines[i], ".\n") == 0)
                     break;
             }
             // check for format of mail
@@ -113,15 +113,10 @@ int main(int argc, char *argv[])
                 continue;
             }
             // format is correct
-            // send HELO domain name
-            char helo[100];
-            strcpy(helo, "HELO ");
-            strcat(helo, SMTP_SERVER);
-            strcat(helo, "\r\n");
-            send(sockfd, helo, strlen(helo), 0);
-            // receive acknowkledgement from server "250 OK domain name"
+            // recieve service ready message
             char buffer[MAX_BUFFER_SIZE];
             char msg[MAX_BUFFER_SIZE];
+            memset(buffer, 0, sizeof(buffer));
             while (1)
             {
                 memset(buffer, 0, sizeof(buffer));
@@ -134,7 +129,42 @@ int main(int argc, char *argv[])
                     perror("Error in receiving\n");
                     exit(1);
                 }
-                if (n > 1 && buffer[n - 1] == '\n')
+                if (n >= 2 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
+                {
+                    buffer[n - 1] = '\0';
+                    strcat(msg, buffer);
+                    break;
+                }
+                strcat(msg, buffer);
+            }
+            printf("%s\n", msg);
+            // check for 220 <iitkgp.edu> Service ready
+            if (strcmp(msg, "220 iitkgp.edu Service ready") != 0)
+            {
+                printf("Error in connecting to server\n");
+                continue;
+            }
+            // send HELO domain name
+            char helo[100];
+            strcpy(helo, "HELO ");
+            strcat(helo, SMTP_SERVER);
+            strcat(helo, "\r\n");
+            send(sockfd, helo, strlen(helo), 0);
+            // receive acknowkledgement from server "250 OK domain name"
+
+            while (1)
+            {
+                memset(buffer, 0, sizeof(buffer));
+                int n = recv(sockfd, buffer, sizeof(buffer), 0);
+                // break when EOF is reached
+                if (n == 0)
+                    break;
+                if (n < 0)
+                {
+                    perror("Error in receiving\n");
+                    exit(1);
+                }
+                if (n > 1 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
                 {
                     buffer[n - 1] = '\0';
                     strcat(msg, buffer);
@@ -170,7 +200,7 @@ int main(int argc, char *argv[])
                     perror("Error in receiving\n");
                     exit(1);
                 }
-                if (n > 1 && buffer[n - 1] == '\n')
+                if (n > 1 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
                 {
                     buffer[n - 1] = '\0';
                     strcat(msg, buffer);
@@ -179,7 +209,7 @@ int main(int argc, char *argv[])
                 strcat(msg, buffer);
             }
             printf("%s\n", msg);
-            // check for 250 
+            // check for 250
             if (strncmp(msg, "250", 3) != 0)
             {
                 printf("Error in MAIL\n");
@@ -206,7 +236,7 @@ int main(int argc, char *argv[])
                     perror("Error in receiving\n");
                     exit(1);
                 }
-                if (n > 1 && buffer[n - 1] == '\n')
+                if (n > 1 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
                 {
                     buffer[n - 1] = '\0';
                     strcat(msg, buffer);
@@ -238,7 +268,7 @@ int main(int argc, char *argv[])
                     perror("Error in receiving\n");
                     exit(1);
                 }
-                if (n > 1 && buffer[n - 1] == '\n')
+                if (n > 1 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
                 {
                     buffer[n - 1] = '\0';
                     strcat(msg, buffer);
@@ -248,7 +278,7 @@ int main(int argc, char *argv[])
             }
             printf("%s\n", msg);
             // check for 354
-            if(strncmp(msg, "354", 3) != 0)
+            if (strncmp(msg, "354", 3) != 0)
             {
                 printf("Error in DATA\n");
                 continue;
@@ -260,10 +290,10 @@ int main(int argc, char *argv[])
             // send subject_line
             send(sockfd, subject_line, strlen(subject_line), 0);
             // send message_lines
-            for(int i = 0; i < 10; ++i)
+            for (int i = 0; i < 10; ++i)
             {
                 send(sockfd, message_lines[i], strlen(message_lines[i]), 0);
-                if(strcmp(message_lines[i], ".\n") == 0)
+                if (strcmp(message_lines[i], ".\n") == 0)
                     break;
             }
             // receive acknowkledgement from server 250 OK Message accepted for delivery
@@ -281,7 +311,7 @@ int main(int argc, char *argv[])
                     perror("Error in receiving\n");
                     exit(1);
                 }
-                if (n > 1 && buffer[n - 1] == '\n')
+                if (n > 1 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
                 {
                     buffer[n - 1] = '\0';
                     strcat(msg, buffer);
@@ -291,12 +321,13 @@ int main(int argc, char *argv[])
             }
             printf("%s\n", msg);
             // check for 250
-            if(strcmp(msg, "250 OK Message accepted for delivery") != 0)
+            if (strcmp(msg, "250 OK Message accepted for delivery") != 0)
             {
                 printf("Error in sending mail\n");
                 continue;
             }
-            else{
+            else
+            {
                 printf("Mail sent successfully\n");
             }
             // send QUIT
