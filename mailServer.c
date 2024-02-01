@@ -5,33 +5,39 @@
 #include <arpa/inet.h>
 #include <time.h>
 
-
 #define MAX_BUFFER_SIZE 1024
-#define PORTNO 1235
 
 void handleClient(int clientSocket);
 
-int main()
+int main(int argc, char *argv[])
 {
+    if (argc != 2)
+    {
+        printf("[-] Usage : server [PORTNO]\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int port = atoi(argv[1]);
+
     int serverSocket, clientSocket;
     struct sockaddr_in serverAddr, clientAddr;
-    socklen_t clientAddrLen, Len = sizeof(clientAddr);
+    socklen_t clientAddrLen = sizeof(clientAddr);
 
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == -1)
     {
-        perror("Error creating socket");
+        perror("[-] Error creating socket");
         exit(EXIT_FAILURE);
     }
 
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
-    serverAddr.sin_port = htons(PORTNO);
+    serverAddr.sin_port = htons(port);
 
     if (bind(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
     {
-        perror("Error binding socket");
+        perror("[-] Error binding socket");
         exit(EXIT_FAILURE);
     }
 
@@ -40,14 +46,15 @@ int main()
         perror("Error listening on socket");
         exit(EXIT_FAILURE);
     }
+    printf("==========SMTP Server Running=============\n");
 
     while (1)
     {
-        printf("SMTP Service Ready iitkgp.edu\n");
+        printf("[+] SMTP Service Ready iitkgp.edu\n");
         clientSocket = accept(serverSocket, (struct sockaddr *)&clientAddr, &clientAddrLen);
         if (clientSocket == -1)
         {
-            perror("Error accepting connection");
+            perror("[-] Error accepting connection");
             continue;
         }
 
@@ -58,9 +65,7 @@ int main()
             close(clientSocket);
             exit(EXIT_SUCCESS);
         }
-
         close(clientSocket);
-        sleep(1);
     }
 
     close(serverSocket);
@@ -70,13 +75,7 @@ int main()
 
 void handleClient(int clientSocket)
 {
-    // char buffer[MAX_BUFFER_SIZE];
-    // memset(buffer, 0, sizeof(buffer));
-    // char msg[1000];
     send(clientSocket, "220 iitkgp.edu Service ready\r\n", 31, 0);
-    printf("Message sent\n");
-    // memset(buffer, 0, sizeof(buffer));
-    // memset(msg, 0, sizeof(msg));
     char buffer[MAX_BUFFER_SIZE];
     char msg[MAX_BUFFER_SIZE];
     memset(buffer, '\0', sizeof(buffer));
@@ -92,7 +91,7 @@ void handleClient(int clientSocket)
         }
         else if (n < 0)
         {
-            perror("Error in receiving");
+            perror("[-] Error in receiving");
             exit(1);
         }
 
@@ -101,7 +100,6 @@ void handleClient(int clientSocket)
         // Check for the end of a line (CRLF)
         if (strstr(buffer, "\r\n") != NULL)
         {
-            // printf("Break condition met\n");
             strcat(msg, buffer);
             break;
         }
@@ -111,7 +109,6 @@ void handleClient(int clientSocket)
     printf("%s\n", msg);
     if (strncmp(msg, "HELO", 4) == 0)
     {
-        // printf("Helo received\n");
         send(clientSocket, "250 OK Hello iitkgp.edu\r\n", 30, 0);
     }
     else
@@ -139,12 +136,9 @@ void handleClient(int clientSocket)
             exit(1);
         }
 
-        // printf("Received: %s\n", buffer);
-
         // Check for the end of a line (CRLF)
         if (strstr(buffer, "\r\n") != NULL)
         {
-            // printf("Break condition met\n");
             strcat(msg, buffer);
             break;
         }
@@ -175,7 +169,7 @@ void handleClient(int clientSocket)
             break;
         if (n < 0)
         {
-            perror("Error in receiving\n");
+            perror("[-] Error in receiving\n");
             exit(1);
         }
         if (n >= 2 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
@@ -210,7 +204,7 @@ void handleClient(int clientSocket)
             break;
         if (n < 0)
         {
-            perror("Error in receiving\n");
+            perror("[-] Error in receiving\n");
             exit(1);
         }
         if (n >= 2 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
@@ -245,7 +239,7 @@ void handleClient(int clientSocket)
             break;
         if (n < 0)
         {
-            perror("Error in receiving\n");
+            perror("[-] Error in receiving\n");
             exit(1);
         }
         if (buffer[n - 1] == '\n' && buffer[n - 2] == '.')
@@ -256,7 +250,6 @@ void handleClient(int clientSocket)
         }
         strcat(msg, buffer);
     }
-    printf("mail recieved!\n%s\n", msg);
 
     char username[100];
     int i = 0;
@@ -272,7 +265,6 @@ void handleClient(int clientSocket)
     }
     username[j] = '\0';
 
-    printf("Username-> %s\n", username);
     strcat(username, "/mymailbox");
     FILE *fp = fopen(username, "a");
     // write msg in file
@@ -310,7 +302,7 @@ void handleClient(int clientSocket)
             token = strtok(NULL, delimiter);
         }
         // send 250 Ok Message accepted for delivery
-
+        fclose(fp);
         send(clientSocket, "250 OK Message accepted for delivery\r\n", 38, 0);
     }
     else
@@ -329,7 +321,7 @@ void handleClient(int clientSocket)
             break;
         if (n < 0)
         {
-            perror("Error in receiving\n");
+            perror("[-] Error in receiving\n");
             exit(1);
         }
         if (n >= 2 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
@@ -340,7 +332,6 @@ void handleClient(int clientSocket)
         }
         strcat(msg, buffer);
     }
-    // printf("gergerge %s\n", msg);
     // send 221 iitkgp.edu closing connection
     send(clientSocket, "221 iitkgp.edu closing connection\r\n", 35, 0);
 }
