@@ -15,9 +15,9 @@
 
 int isvalidmail(char from_line[], char to_line[], char subject_line[])
 {
-    printf("%s\n", from_line);
-    printf("%s\n", to_line);
-    printf("%s\n", subject_line);
+    // printf("%s\n", from_line);
+    // printf("%s\n", to_line);
+    // printf("%s\n", subject_line);
     if (strncmp(from_line, "From:", 5) != 0 || strncmp(to_line, "To:", 3) != 0)
     {
         printf("Incorrect Format \n");

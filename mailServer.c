@@ -283,5 +283,6 @@ void handleClient(int clientSocket)
     printf("%s\n", msg);
     // send 221 iitkgp.edu closing connection
     send(clientSocket, "221 iitkgp.edu closing connection\r\n", 35, 0);
-    
+    // recieve new mails
+
 }
