@@ -250,7 +250,7 @@ void handleClient(int clientSocket)
         }
         strcat(msg, buffer);
     }
-
+    printf("%s\n", msg);
     char username[100];
     int i = 0;
     while (msg[i] != 'T' || msg[i + 1] != 'o' || msg[i + 2] != ':' || msg[i + 3] != ' ')
