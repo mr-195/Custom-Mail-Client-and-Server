@@ -3,9 +3,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <time.h>
+
 
 #define MAX_BUFFER_SIZE 1024
-#define PORTNO 1236
+#define PORTNO 1235
 
 void handleClient(int clientSocket);
 
@@ -39,10 +41,9 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    printf("SMTP Service Ready iitkgp.edu\n");
-
     while (1)
     {
+        printf("SMTP Service Ready iitkgp.edu\n");
         clientSocket = accept(serverSocket, (struct sockaddr *)&clientAddr, &clientAddrLen);
         if (clientSocket == -1)
         {
@@ -59,6 +60,7 @@ int main()
         }
 
         close(clientSocket);
+        sleep(1);
     }
 
     close(serverSocket);
@@ -71,7 +73,8 @@ void handleClient(int clientSocket)
     // char buffer[MAX_BUFFER_SIZE];
     // memset(buffer, 0, sizeof(buffer));
     // char msg[1000];
-    send(clientSocket, "220 iitkgp.edu Service ready\r\n", 34, 0);
+    send(clientSocket, "220 iitkgp.edu Service ready\r\n", 31, 0);
+    printf("Message sent\n");
     // memset(buffer, 0, sizeof(buffer));
     // memset(msg, 0, sizeof(msg));
     char buffer[MAX_BUFFER_SIZE];
@@ -256,13 +259,14 @@ void handleClient(int clientSocket)
     printf("mail recieved!\n%s\n", msg);
 
     char username[100];
-    int i=0;
-    while(msg[i]!='T' || msg[i+1]!='o' || msg[i+2]!=':'|| msg[i+3]!=' ')
+    int i = 0;
+    while (msg[i] != 'T' || msg[i + 1] != 'o' || msg[i + 2] != ':' || msg[i + 3] != ' ')
         i++;
-    i+=4;
-    int j=0;
-    while(msg[i]!='@'){
-        username[j]=msg[i];
+    i += 4;
+    int j = 0;
+    while (msg[i] != '@')
+    {
+        username[j] = msg[i];
         i++;
         j++;
     }
@@ -271,17 +275,46 @@ void handleClient(int clientSocket)
     printf("Username-> %s\n", username);
     strcat(username, "/mymailbox");
     FILE *fp = fopen(username, "a");
-
     // write msg in file
     if (fp != NULL)
     {
-        fprintf(fp, "%s\n", msg);
+        // fprintf(fp, "%s\n", msg);
+        // char msg[] = "This is a\nsample string\nwith newline characters.";
+        const char delimiter[2] = "\n";
 
+        // Get the first token
+        char *token = strtok(msg, delimiter);
+        int cnt = 0;
+        // Continue getting tokens until there are no more
+        time_t rawtime;
+        struct tm *timeinfo;
+        char buffer[80];
+
+        // Get current time
+        time(&rawtime);
+        timeinfo = localtime(&rawtime);
+
+        // Format time as a string
+        strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
+        // printf("BUFFER %s\n",buffer);
+        while (token != NULL)
+        {
+            fprintf(fp, "%s\n", token);
+            cnt++;
+            if (cnt == 3)
+            {
+                fprintf(fp, "Recieved at: %s\n", buffer);
+            }
+
+            //  Get the next token
+            token = strtok(NULL, delimiter);
+        }
         // send 250 Ok Message accepted for delivery
 
         send(clientSocket, "250 OK Message accepted for delivery\r\n", 38, 0);
     }
-    else{
+    else
+    {
         send(clientSocket, "236 user not found\r\n", 23, 0);
     }
     // recieve Quit

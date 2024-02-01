@@ -90,6 +90,7 @@ int main(int argc, char *argv[])
 
         if (option == 1)
         {
+            // to be implemented later
         }
         else if (option == 2)
         {
@@ -125,7 +126,7 @@ int main(int argc, char *argv[])
                     break;
             }
 
-          //  printf("You entered:\n");
+            //  printf("You entered:\n");
             // check for format of mail
             int valid = isvalidmail(from_line, to_line, subject_line);
 
@@ -155,12 +156,12 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
 
-                //printf("Received: %s\n", buffer);
+                // printf("Received: %s\n", buffer);
 
                 // Check for the end of a line (CRLF)
                 if (strchr(buffer, '\r') && strchr(buffer, '\n'))
                 {
-                    //printf("Break condition met\n");
+                    // printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
@@ -168,13 +169,16 @@ int main(int argc, char *argv[])
                 strcat(msg, buffer);
             }
 
-            printf("%s\n", msg);
+            printf("Message is ehfweui jhqewifeh%s\n", msg);
             // check for 220 <iitkgp.edu> Service ready
             if (strcmp(msg, "220 iitkgp.edu Service ready\r\n") != 0)
             {
                 printf("Error in connecting to server\n");
                 continue;
             }
+
+            printf("Connection ready!\n");
+
             // send HELO domain name
             char helo[100];
             strcpy(helo, "HELO ");
@@ -198,12 +202,12 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
 
-               // printf("Received: %s\n", buffer);
+                // printf("Received: %s\n", buffer);
 
                 // Check for the end of a line (CRLF)
                 if (strstr(buffer, "\r\n") != NULL)
                 {
-                   // printf("Break condition met\n");
+                    // printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
@@ -242,12 +246,12 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
 
-                //printf("Received: %s\n", buffer);
+                // printf("Received: %s\n", buffer);
 
                 // Check for the end of a line (CRLF)
                 if (strstr(buffer, "\r\n") != NULL)
                 {
-                   // printf("Break condition met\n");
+                    // printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
@@ -285,12 +289,12 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
 
-                //printf("Received: %s\n", buffer);
+                // printf("Received: %s\n", buffer);
 
                 // Check for the end of a line (CRLF)
                 if (strstr(buffer, "\r\n") != NULL)
                 {
-                    //printf("Break condition met\n");
+                    // printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
@@ -307,11 +311,11 @@ int main(int argc, char *argv[])
             // send DATA
             send(sockfd, "DATA\r\n", strlen("DATA\r\n"), 0);
             // receive acknowkledgement from server 354 Start mail input; end with <CRLF>.<CRLF>
-            memset(buffer,'\0', sizeof(buffer));
-            memset(msg,'\0', sizeof(msg));
+            memset(buffer, '\0', sizeof(buffer));
+            memset(msg, '\0', sizeof(msg));
             while (1)
             {
-                memset(buffer,'\0', sizeof(buffer));
+                memset(buffer, '\0', sizeof(buffer));
                 int n = recv(sockfd, buffer, sizeof(buffer), 0);
                 // break when EOF is reached
                 if (n == 0)
@@ -324,18 +328,17 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
 
-               // printf("Received: %s\n", buffer);
+                // printf("Received: %s\n", buffer);
 
                 // Check for the end of a line (CRLF)
                 if (strstr(buffer, "\r\n") != NULL)
                 {
-                   // printf("Break condition met\n");
+                    // printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
 
                 strcat(msg, buffer);
-               
             }
             printf("%s\n", msg);
             // check for 354
@@ -358,11 +361,11 @@ int main(int argc, char *argv[])
                     break;
             }
             // receive acknowkledgement from server 250 OK Message accepted for delivery
-            memset(buffer,'\0', sizeof(buffer));
-            memset(msg,'\0', sizeof(msg));
+            memset(buffer, '\0', sizeof(buffer));
+            memset(msg, '\0', sizeof(msg));
             while (1)
             {
-                memset(buffer,'\0', sizeof(buffer));
+                memset(buffer, '\0', sizeof(buffer));
                 int n = recv(sockfd, buffer, sizeof(buffer), 0);
                 // break when EOF is reached
                 if (n == 0)
@@ -375,18 +378,17 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
 
-               // printf("Received: %s\n", buffer);
+                // printf("Received: %s\n", buffer);
 
                 // Check for the end of a line (CRLF)
                 if (strstr(buffer, "\r\n") != NULL)
                 {
-                   // printf("Break condition met\n");
+                    // printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
 
                 strcat(msg, buffer);
-                
             }
             printf("%s\n", msg);
             // check for 250
@@ -402,11 +404,11 @@ int main(int argc, char *argv[])
             // send QUIT
             send(sockfd, "QUIT\r\n", strlen("QUIT\r\n"), 0);
             // receive acknowledgement 221 iitkgp.edu closing connection
-            memset(buffer,'\0', sizeof(buffer));
-            memset(msg,'\0', sizeof(msg));
+            memset(buffer, '\0', sizeof(buffer));
+            memset(msg, '\0', sizeof(msg));
             while (1)
             {
-                memset(buffer,'\0', sizeof(buffer));
+                memset(buffer, '\0', sizeof(buffer));
                 int n = recv(sockfd, buffer, sizeof(buffer), 0);
                 // break when EOF is reached
                 if (n == 0)
@@ -419,18 +421,17 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
 
-               // printf("Received: %s\n", buffer);
+                // printf("Received: %s\n", buffer);
 
                 // Check for the end of a line (CRLF)
                 if (strstr(buffer, "\r\n") != NULL)
                 {
-                   // printf("Break condition met\n");
+                    // printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
 
                 strcat(msg, buffer);
-                
             }
             printf("%s\n", msg);
             // check for 221
