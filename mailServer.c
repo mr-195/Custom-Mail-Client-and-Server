@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 
 #define MAX_BUFFER_SIZE 1024
-#define PORTNO 1234
+#define PORTNO 1236
 
 void handleClient(int clientSocket);
 
@@ -71,39 +71,39 @@ void handleClient(int clientSocket)
     // char buffer[MAX_BUFFER_SIZE];
     // memset(buffer, 0, sizeof(buffer));
     // char msg[1000];
-    send(clientSocket, "220 iitkgp.edu Service ready\r\n",34, 0);
+    send(clientSocket, "220 iitkgp.edu Service ready\r\n", 34, 0);
     // memset(buffer, 0, sizeof(buffer));
     // memset(msg, 0, sizeof(msg));
     char buffer[MAX_BUFFER_SIZE];
     char msg[MAX_BUFFER_SIZE];
     memset(buffer, '\0', sizeof(buffer));
-    memset(msg,'\0', sizeof(msg));
+    memset(msg, '\0', sizeof(msg));
     while (1)
     {
-        memset(buffer,'\0', sizeof(buffer));
+        memset(buffer, '\0', sizeof(buffer));
         int n = recv(clientSocket, buffer, sizeof(buffer), 0);
         // break when EOF is reached
         if (n == 0)
-                {
-                    break; // Connection closed by the remote peer
-                }
-                else if (n < 0)
-                {
-                    perror("Error in receiving");
-                    exit(1);
-                }
+        {
+            break; // Connection closed by the remote peer
+        }
+        else if (n < 0)
+        {
+            perror("Error in receiving");
+            exit(1);
+        }
 
-                //printf("Received: %s\n", buffer);
+        // printf("Received: %s\n", buffer);
 
-                // Check for the end of a line (CRLF)
-                if (strstr(buffer, "\r\n") != NULL)
-                {
-                   // printf("Break condition met\n");
-                    strcat(msg, buffer);
-                    break;
-                }
+        // Check for the end of a line (CRLF)
+        if (strstr(buffer, "\r\n") != NULL)
+        {
+            // printf("Break condition met\n");
+            strcat(msg, buffer);
+            break;
+        }
 
-                strcat(msg, buffer);
+        strcat(msg, buffer);
     }
     printf("%s\n", msg);
     if (strncmp(msg, "HELO", 4) == 0)
@@ -119,35 +119,34 @@ void handleClient(int clientSocket)
 
     // MAIL FROM
 
-    memset(buffer,'\0', sizeof(buffer));
-    memset(msg,'\0', sizeof(msg));
+    memset(buffer, '\0', sizeof(buffer));
+    memset(msg, '\0', sizeof(msg));
     while (1)
     {
-        memset(buffer,'\0', sizeof(buffer));
+        memset(buffer, '\0', sizeof(buffer));
         int n = recv(clientSocket, buffer, sizeof(buffer), 0);
         // break when EOF is reached
-         if (n == 0)
-                {
-                    break; // Connection closed by the remote peer
-                }
-                else if (n < 0)
-                {
-                    perror("Error in receiving");
-                    exit(1);
-                }
+        if (n == 0)
+        {
+            break; // Connection closed by the remote peer
+        }
+        else if (n < 0)
+        {
+            perror("Error in receiving");
+            exit(1);
+        }
 
-                //printf("Received: %s\n", buffer);
+        // printf("Received: %s\n", buffer);
 
-                // Check for the end of a line (CRLF)
-                if (strstr(buffer, "\r\n") != NULL)
-                {
-                   // printf("Break condition met\n");
-                    strcat(msg, buffer);
-                    break;
-                }
+        // Check for the end of a line (CRLF)
+        if (strstr(buffer, "\r\n") != NULL)
+        {
+            // printf("Break condition met\n");
+            strcat(msg, buffer);
+            break;
+        }
 
-                strcat(msg, buffer);
-     
+        strcat(msg, buffer);
     }
     printf("%s\n", msg);
     if (strncmp(msg, "MAIL", 4) == 0)
@@ -162,11 +161,11 @@ void handleClient(int clientSocket)
 
     // MAIL FROM
 
-    memset(buffer,'\0', sizeof(buffer));
-    memset(msg,'\0', sizeof(msg));
+    memset(buffer, '\0', sizeof(buffer));
+    memset(msg, '\0', sizeof(msg));
     while (1)
     {
-        memset(buffer,'\0', sizeof(buffer));
+        memset(buffer, '\0', sizeof(buffer));
         int n = recv(clientSocket, buffer, sizeof(buffer), 0);
         // break when EOF is reached
         if (n == 0)
@@ -232,11 +231,11 @@ void handleClient(int clientSocket)
 
     // DATA
 
-    memset(buffer,'\0', sizeof(buffer));
-    memset(msg,'\0', sizeof(msg));
+    memset(buffer, '\0', sizeof(buffer));
+    memset(msg, '\0', sizeof(msg));
     while (1)
     {
-        memset(buffer,'\0', sizeof(buffer));
+        memset(buffer, '\0', sizeof(buffer));
         int n = recv(clientSocket, buffer, sizeof(buffer), 0);
         // break when EOF is reached
         if (n == 0)
@@ -246,7 +245,7 @@ void handleClient(int clientSocket)
             perror("Error in receiving\n");
             exit(1);
         }
-        if (buffer[n-1]=='\n' && buffer[n-2]=='.')
+        if (buffer[n - 1] == '\n' && buffer[n - 2] == '.')
         {
             buffer[n - 1] = '\0';
             strcat(msg, buffer);
@@ -254,15 +253,42 @@ void handleClient(int clientSocket)
         }
         strcat(msg, buffer);
     }
-    printf("%s\n", msg);
-    // send 250 Ok Message accepted for delivery
-    send(clientSocket, "250 OK Message accepted for delivery\r\n", 38, 0);
-    //recieve Quit
-    memset(buffer,'\0', sizeof(buffer));
-    memset(msg,'\0', sizeof(msg));
+    printf("mail recieved!\n%s\n", msg);
+
+    char username[100];
+    int i=0;
+    while(msg[i]!='T' || msg[i+1]!='o' || msg[i+2]!=':'|| msg[i+3]!=' ')
+        i++;
+    i+=4;
+    int j=0;
+    while(msg[i]!='@'){
+        username[j]=msg[i];
+        i++;
+        j++;
+    }
+    username[j] = '\0';
+
+    printf("Username-> %s\n", username);
+    FILE *fp = fopen("Utsav/mymailbox", "a");
+
+    // write msg in file
+    if (fp != NULL)
+    {
+        fprintf(fp, "%s\n", msg);
+
+        // send 250 Ok Message accepted for delivery
+
+        send(clientSocket, "250 OK Message accepted for delivery\r\n", 38, 0);
+    }
+    else{
+        send(clientSocket, "236 user not found\r\n", 23, 0);
+    }
+    // recieve Quit
+    memset(buffer, '\0', sizeof(buffer));
+    memset(msg, '\0', sizeof(msg));
     while (1)
     {
-        memset(buffer,'\0', sizeof(buffer));
+        memset(buffer, '\0', sizeof(buffer));
         int n = recv(clientSocket, buffer, sizeof(buffer), 0);
         // break when EOF is reached
         if (n == 0)
@@ -280,9 +306,12 @@ void handleClient(int clientSocket)
         }
         strcat(msg, buffer);
     }
-    printf("%s\n", msg);
+    // printf("gergerge %s\n", msg);
     // send 221 iitkgp.edu closing connection
     send(clientSocket, "221 iitkgp.edu closing connection\r\n", 35, 0);
+<<<<<<< HEAD
     // recieve new mails
 
+=======
+>>>>>>> 7285541b4dd210be550bcc9f51f72cd15542098f
 }
