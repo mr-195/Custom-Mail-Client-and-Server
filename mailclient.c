@@ -125,15 +125,15 @@ int main(int argc, char *argv[])
                     break;
             }
 
-            printf("You entered:\n");
+          //  printf("You entered:\n");
             // check for format of mail
-            // int valid = isvalidmail(from_line, to_line, subject_line);
+            int valid = isvalidmail(from_line, to_line, subject_line);
 
-            // if (valid == 0)
-            // {
-            //     printf("Invalid mail format\n");
-            //     continue;
-            // }
+            if (valid == 0)
+            {
+                printf("Invalid mail format\n");
+                continue;
+            }
             // format is correct
             // recieve service ready message
             char buffer[MAX_BUFFER_SIZE];
@@ -155,12 +155,12 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
 
-                printf("Received: %s\n", buffer);
+                //printf("Received: %s\n", buffer);
 
                 // Check for the end of a line (CRLF)
                 if (strchr(buffer, '\r') && strchr(buffer, '\n'))
                 {
-                    printf("Break condition met\n");
+                    //printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
@@ -198,12 +198,12 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
 
-                printf("Received: %s\n", buffer);
+               // printf("Received: %s\n", buffer);
 
                 // Check for the end of a line (CRLF)
                 if (strstr(buffer, "\r\n") != NULL)
                 {
-                    printf("Break condition met\n");
+                   // printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
             strcpy(mail_from, "MAIL ");
             strcat(mail_from, from_line);
             strcat(mail_from, "\r\n");
-            printf("%s\n", mail_from);
+            // printf("%s\n", mail_from);
             send(sockfd, mail_from, strlen(mail_from), 0);
             // receive acknowkledgement from server 250 from_line ... Sender Ok
             memset(buffer, '\0', sizeof(buffer));
@@ -242,12 +242,12 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
 
-                printf("Received: %s\n", buffer);
+                //printf("Received: %s\n", buffer);
 
                 // Check for the end of a line (CRLF)
                 if (strstr(buffer, "\r\n") != NULL)
                 {
-                    printf("Break condition met\n");
+                   // printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
@@ -285,12 +285,12 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
 
-                printf("Received: %s\n", buffer);
+                //printf("Received: %s\n", buffer);
 
                 // Check for the end of a line (CRLF)
                 if (strstr(buffer, "\r\n") != NULL)
                 {
-                    printf("Break condition met\n");
+                    //printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
@@ -324,12 +324,12 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
 
-                printf("Received: %s\n", buffer);
+               // printf("Received: %s\n", buffer);
 
                 // Check for the end of a line (CRLF)
                 if (strstr(buffer, "\r\n") != NULL)
                 {
-                    printf("Break condition met\n");
+                   // printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
@@ -358,27 +358,35 @@ int main(int argc, char *argv[])
                     break;
             }
             // receive acknowkledgement from server 250 OK Message accepted for delivery
-            memset(buffer, 0, sizeof(buffer));
-            memset(msg, 0, sizeof(msg));
+            memset(buffer,'\0', sizeof(buffer));
+            memset(msg,'\0', sizeof(msg));
             while (1)
             {
-                memset(buffer, 0, sizeof(buffer));
+                memset(buffer,'\0', sizeof(buffer));
                 int n = recv(sockfd, buffer, sizeof(buffer), 0);
                 // break when EOF is reached
                 if (n == 0)
-                    break;
-                if (n < 0)
                 {
-                    perror("Error in receiving\n");
+                    break; // Connection closed by the remote peer
+                }
+                else if (n < 0)
+                {
+                    perror("Error in receiving");
                     exit(1);
                 }
-                if (n > 1 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
+
+               // printf("Received: %s\n", buffer);
+
+                // Check for the end of a line (CRLF)
+                if (strstr(buffer, "\r\n") != NULL)
                 {
-                    buffer[n - 1] = '\0';
+                   // printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
+
                 strcat(msg, buffer);
+                
             }
             printf("%s\n", msg);
             // check for 250
@@ -393,6 +401,44 @@ int main(int argc, char *argv[])
             }
             // send QUIT
             send(sockfd, "QUIT\r\n", strlen("QUIT\r\n"), 0);
+            // receive acknowledgement 221 iitkgp.edu closing connection
+            memset(buffer,'\0', sizeof(buffer));
+            memset(msg,'\0', sizeof(msg));
+            while (1)
+            {
+                memset(buffer,'\0', sizeof(buffer));
+                int n = recv(sockfd, buffer, sizeof(buffer), 0);
+                // break when EOF is reached
+                if (n == 0)
+                {
+                    break; // Connection closed by the remote peer
+                }
+                else if (n < 0)
+                {
+                    perror("Error in receiving");
+                    exit(1);
+                }
+
+               // printf("Received: %s\n", buffer);
+
+                // Check for the end of a line (CRLF)
+                if (strstr(buffer, "\r\n") != NULL)
+                {
+                   // printf("Break condition met\n");
+                    strcat(msg, buffer);
+                    break;
+                }
+
+                strcat(msg, buffer);
+                
+            }
+            printf("%s\n", msg);
+            // check for 221
+            if (strcmp(msg, "221 iitkgp.edu closing connection\r\n") != 0)
+            {
+                printf("Error in QUIT\n");
+                continue;
+            }
         }
         else if (option == 3)
         {

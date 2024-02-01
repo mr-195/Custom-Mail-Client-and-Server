@@ -93,12 +93,12 @@ void handleClient(int clientSocket)
                     exit(1);
                 }
 
-                printf("Received: %s\n", buffer);
+                //printf("Received: %s\n", buffer);
 
                 // Check for the end of a line (CRLF)
                 if (strstr(buffer, "\r\n") != NULL)
                 {
-                    printf("Break condition met\n");
+                   // printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
@@ -108,7 +108,7 @@ void handleClient(int clientSocket)
     printf("%s\n", msg);
     if (strncmp(msg, "HELO", 4) == 0)
     {
-        printf("Helo received\n");
+        // printf("Helo received\n");
         send(clientSocket, "250 OK Hello iitkgp.edu\r\n", 30, 0);
     }
     else
@@ -136,12 +136,12 @@ void handleClient(int clientSocket)
                     exit(1);
                 }
 
-                printf("Received: %s\n", buffer);
+                //printf("Received: %s\n", buffer);
 
                 // Check for the end of a line (CRLF)
                 if (strstr(buffer, "\r\n") != NULL)
                 {
-                    printf("Break condition met\n");
+                   // printf("Break condition met\n");
                     strcat(msg, buffer);
                     break;
                 }
@@ -162,11 +162,11 @@ void handleClient(int clientSocket)
 
     // MAIL FROM
 
-    memset(buffer, 0, sizeof(buffer));
-    memset(msg, 0, sizeof(msg));
+    memset(buffer,'\0', sizeof(buffer));
+    memset(msg,'\0', sizeof(msg));
     while (1)
     {
-        memset(buffer, 0, sizeof(buffer));
+        memset(buffer,'\0', sizeof(buffer));
         int n = recv(clientSocket, buffer, sizeof(buffer), 0);
         // break when EOF is reached
         if (n == 0)
@@ -187,7 +187,7 @@ void handleClient(int clientSocket)
     printf("%s\n", msg);
     if (strncmp(msg, "RCPT To", 7) == 0)
     {
-        send(clientSocket, "250 OK Hello iitkgp.edu\r\n", 26, 0);
+        send(clientSocket, "250 root .. Recipient Ok\r\n", 26, 0);
     }
     else
     {
@@ -246,6 +246,32 @@ void handleClient(int clientSocket)
             perror("Error in receiving\n");
             exit(1);
         }
+        if (buffer[n-1]=='\n' && buffer[n-2]=='.')
+        {
+            buffer[n - 1] = '\0';
+            strcat(msg, buffer);
+            break;
+        }
+        strcat(msg, buffer);
+    }
+    printf("%s\n", msg);
+    // send 250 Ok Message accepted for delivery
+    send(clientSocket, "250 OK Message accepted for delivery\r\n", 38, 0);
+    //recieve Quit
+    memset(buffer,'\0', sizeof(buffer));
+    memset(msg,'\0', sizeof(msg));
+    while (1)
+    {
+        memset(buffer,'\0', sizeof(buffer));
+        int n = recv(clientSocket, buffer, sizeof(buffer), 0);
+        // break when EOF is reached
+        if (n == 0)
+            break;
+        if (n < 0)
+        {
+            perror("Error in receiving\n");
+            exit(1);
+        }
         if (n >= 2 && buffer[n - 1] == '\n' && buffer[n - 2] == '\r')
         {
             buffer[n - 1] = '\0';
@@ -255,4 +281,7 @@ void handleClient(int clientSocket)
         strcat(msg, buffer);
     }
     printf("%s\n", msg);
+    // send 221 iitkgp.edu closing connection
+    send(clientSocket, "221 iitkgp.edu closing connection\r\n", 35, 0);
+    
 }
