@@ -269,7 +269,8 @@ void handleClient(int clientSocket)
     username[j] = '\0';
 
     printf("Username-> %s\n", username);
-    FILE *fp = fopen("Utsav/mymailbox", "a");
+    strcat(username, "/mymailbox");
+    FILE *fp = fopen(username, "a");
 
     // write msg in file
     if (fp != NULL)
@@ -309,9 +310,4 @@ void handleClient(int clientSocket)
     // printf("gergerge %s\n", msg);
     // send 221 iitkgp.edu closing connection
     send(clientSocket, "221 iitkgp.edu closing connection\r\n", 35, 0);
-<<<<<<< HEAD
-    // recieve new mails
-
-=======
->>>>>>> 7285541b4dd210be550bcc9f51f72cd15542098f
 }
