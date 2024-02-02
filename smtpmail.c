@@ -267,12 +267,13 @@ void handleClient(int clientSocket)
 
     strcat(username, "/mymailbox");
     FILE *fp = fopen(username, "a");
+
     // write msg in file
     if (fp != NULL)
     {
         // fprintf(fp, "%s\n", msg);
         // char msg[] = "This is a\nsample string\nwith newline characters.";
-        const char delimiter[2] = "\n";
+        char delimiter[2] = "\n";
 
         // Get the first token
         char *token = strtok(msg, delimiter);
@@ -291,16 +292,28 @@ void handleClient(int clientSocket)
         // printf("BUFFER %s\n",buffer);
         while (token != NULL)
         {
-            fprintf(fp, "%s\n", token);
-            cnt++;
-            if (cnt == 3)
+            if (cnt < 3)
+                fprintf(fp, "%s\n", token);
+
+            else if (cnt == 3)
             {
                 fprintf(fp, "Recieved at: %s\n", buffer);
+                fprintf(fp, "%s\n", token);
+                strcpy(delimiter, ".");
+                // break;
             }
+
+            else
+            {
+                fprintf(fp, "%s.", token);
+            }
+            // printf("%s",tokens);
+            cnt++;
 
             //  Get the next token
             token = strtok(NULL, delimiter);
         }
+
         // send 250 Ok Message accepted for delivery
         fclose(fp);
         send(clientSocket, "250 OK Message accepted for delivery\r\n", 38, 0);
