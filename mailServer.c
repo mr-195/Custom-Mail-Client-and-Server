@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 #include <time.h>
 
-#define MAX_BUFFER_SIZE 1024
+#define MAX_BUFFER_SIZE 4000
 
 void handleClient(int clientSocket);
 

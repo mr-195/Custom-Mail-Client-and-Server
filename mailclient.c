@@ -11,7 +11,7 @@
 
 #define SMTP_SERVER "iitkgp.edu"
 #define SMTP_PORT 25
-#define MAX_BUFFER_SIZE 1024
+#define MAX_BUFFER_SIZE 4000
 #define MAX_SIZE 100
 
 int isvalidmail(char from_line[], char to_line[], char subject_line[])
@@ -402,7 +402,7 @@ int main(int argc, char *argv[])
             // send subject_line
             send(sockfd, subject_line, strlen(subject_line), 0);
             // send message_lines
-            for (int i = 0; i < 10; ++i)
+            for (int i = 0; i < 50; ++i)
             {
                 send(sockfd, message_lines[i], strlen(message_lines[i]), 0);
                 if (strcmp(message_lines[i], ".\n") == 0)
