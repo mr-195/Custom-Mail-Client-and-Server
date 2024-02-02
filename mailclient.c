@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
 
             // take input message which ends with a single dot
             // clearInputBuffer();
-            for (int i = 0; i < 10; ++i)
+            for (int i = 0; i < 50; ++i)
             {
                 fgets(message_lines[i], sizeof(message_lines[i]), stdin);
                 // printf("MESSAGE LINE :: %s\n", message_lines[i]);
