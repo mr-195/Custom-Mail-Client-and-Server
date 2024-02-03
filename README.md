@@ -2,4 +2,4 @@
 - 21CS10087 Utsav Dhanuka
 - 21CS10088 Manaswi Raj
 
-This assignment is Based on SMTP Protocol
+This assignment is Based on SMTP Protocol and POP3 protocols
