@@ -6,6 +6,28 @@
 #include <time.h>
 #define POP_PORT 110
 #define MAX_BUFFER_SIZE 1024
+// define a structure to hold the messages of the user
+typedef struct {
+    int num;
+    char from[100];
+    char to [100];
+    char received_at[100];
+    char subject[100];
+    char body[1000];
+}Email;
+
+void parseMailbox(const char * filename,Email emails [], int *num_emails)
+{
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL)
+    {
+        perror("[-] Error in opening file");
+        exit(1);
+    }
+   Email current_email;
+   
+    fclose(fp);
+}
 
 char *receive_message(int client_socket)
 {
@@ -135,6 +157,11 @@ void handle_client(int client_socket) {
         close(client_socket);
         exit(1);
     }
+    // open username/mymailbox
+    strcat(username, "/mymailbox");
+    Email emails [100];
+    int num_emails = 0;
+    parseMailbox(username, emails, &num_emails);
 
     
     // Close the client socket
