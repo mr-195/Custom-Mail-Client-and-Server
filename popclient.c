@@ -149,6 +149,7 @@ int main()
             // send to server
             send(client_socket, list, strlen(list), 0);
             // recieve the list of messages 
+            // recieve +OK number of messages 
             for(int i=0;i<num;i++)
             {
                 char *rec_msg = receive_message(client_socket);

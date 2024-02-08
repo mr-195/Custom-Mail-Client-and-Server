@@ -79,6 +79,9 @@ void parseMailbox(const char *filename, Email emails[], int *num_emails)
         printf("Subject: %s\n", emails[i].subject);
         printf("Body: %s\n", emails[i].body);
     }
+
+    
+
     fclose(fp);
 }
 
@@ -170,6 +173,8 @@ void handle_client(int client_socket)
         close(client_socket);
         exit(1);
     }
+    
+
     // receive password
 
     rec_msg = receive_message(client_socket);
@@ -218,6 +223,96 @@ void handle_client(int client_socket)
     Email emails[100];
     int num_emails = 0;
     parseMailbox(username, emails, &num_emails);
+
+    //recieve STAT
+    rec_msg = receive_message(client_socket);
+    printf("STAT : %s\n", rec_msg);
+    if(strcmp(rec_msg, "STAT\r\n") == 0)
+    {
+        char msg[100];
+        sprintf(msg, "+OK %d %d\r\n", num_emails, 1000);
+        send(client_socket, msg, strlen(msg), 0);
+    }
+    else
+    {
+        send(client_socket, "-ERR invalid command\r\n", 23, 0);
+        close(client_socket);
+        exit(1);
+    }
+
+    // recieve LIST
+    rec_msg = receive_message(client_socket);
+    printf("LIST : %s\n", rec_msg);
+    if(strcmp(rec_msg, "LIST\r\n") == 0)
+    {
+        char msg[100];
+        sprintf(msg, "+OK %d messages\r\n", num_emails);
+        send(client_socket, msg, strlen(msg), 0);
+        for (int i = 0; i < num_emails; i++)
+        {
+            //send in the format of Sl. No. <Sender’s email id> <When received, in date : hour : minute> <Subject>
+            sprintf(msg, "%d %s %s %s\r\n", emails[i].num, emails[i].from, emails[i].received_at, emails[i].subject);
+            send(client_socket, msg, strlen(msg), 0);
+        }
+        send(client_socket, ".\r\n", 3, 0);
+    }
+    else
+    {
+        send(client_socket, "-ERR invalid command\r\n", 23, 0);
+        close(client_socket);
+        exit(1);
+    }
+
+    // recieve RETR
+    rec_msg = receive_message(client_socket);
+    printf("RETR : %s\n", rec_msg);
+    int email_num;
+    sscanf(rec_msg, "RETR %d\r\n", &email_num);
+    if(email_num > num_emails)
+    {
+        send(client_socket, "-ERR invalid email number\r\n", 27, 0);
+        close(client_socket);
+        exit(1);
+    }
+    else
+    {
+        char msg[100];
+        sprintf(msg, "+OK %d octets\r\n", strlen(emails[email_num - 1].body));
+        send(client_socket, msg, strlen(msg), 0);
+        send(client_socket, emails[email_num - 1].body, strlen(emails[email_num - 1].body), 0);
+        send(client_socket, ".\r\n", 3, 0);
+    }
+
+
+    //recieve DELETE 
+    rec_msg = receive_message(client_socket);
+    printf("DELE : %s\n", rec_msg);
+    sscanf(rec_msg, "DELE %d\r\n", &email_num);
+    if(email_num > num_emails)
+    {
+        send(client_socket, "-ERR invalid email number\r\n", 27, 0);
+        close(client_socket);
+        exit(1);
+    }
+    else
+    {
+        send(client_socket, "+OK message deleted\r\n", 23, 0);
+    }
+
+    // recieve QUIT
+    rec_msg = receive_message(client_socket);
+    printf("QUIT : %s\n", rec_msg);
+    if(strcmp(rec_msg, "QUIT\r\n") == 0)
+    {
+        send(client_socket, "+OK POP3 server signing off\r\n", 30, 0);
+    }
+    else
+    {
+        send(client_socket, "-ERR invalid command\r\n", 23, 0);
+        close(client_socket);
+        exit(1);
+    }
+
 
     // Close the client socket
     close(client_socket);
