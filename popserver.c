@@ -263,25 +263,25 @@ void handle_client(int client_socket)
         exit(1);
     }
 
-    // // recieve RETR
-    // rec_msg = receive_message(client_socket);
-    // printf("RETR : %s\n", rec_msg);
-    // int email_num;
-    // sscanf(rec_msg, "RETR %d\r\n", &email_num);
-    // if(email_num > num_emails)
-    // {
-    //     send(client_socket, "-ERR invalid email number\r\n", 27, 0);
-    //     close(client_socket);
-    //     exit(1);
-    // }
-    // else
-    // {
-    //     char msg[100];
-    //     sprintf(msg, "+OK %d octets\r\n", strlen(emails[email_num - 1].body));
-    //     send(client_socket, msg, strlen(msg), 0);
-    //     send(client_socket, emails[email_num - 1].body, strlen(emails[email_num - 1].body), 0);
-    //     send(client_socket, ".\r\n", 3, 0);
-    // }
+    // recieve RETR
+    rec_msg = receive_message(client_socket);
+    printf("RETR : %s\n", rec_msg);
+    int email_num;
+    sscanf(rec_msg, "RETR %d\r\n", &email_num);
+    if(email_num > num_emails)
+    {
+        send(client_socket, "-ERR invalid email number\r\n", 27, 0);
+        close(client_socket);
+        exit(1);
+    }
+    else
+    {
+        char msg[100];
+        sprintf(msg, "+OK %d octets\r\n", strlen(emails[email_num - 1].body));
+        send(client_socket, msg, strlen(msg), 0);
+        send(client_socket, emails[email_num - 1].body, strlen(emails[email_num - 1].body), 0);
+        // send(client_socket, ".\r\n", 3, 0);
+    }
 
 
     // //recieve DELETE 

@@ -84,12 +84,12 @@ int main()
             exit(EXIT_FAILURE);
         }
         // Authorization State
-        char username[100];
-        char password[100];
-        printf("Enter username: ");
-        scanf("%s", username);
-        printf("Enter password: ");
-        scanf("%s", password);
+        char username[100]="Utsav";
+        char password[100]="MacOS";
+        // printf("Enter username: ");
+        // scanf("%s", username);
+        // printf("Enter password: ");
+        // scanf("%s", password);
         // Receive welcome message
         recv(client_socket, buffer, sizeof(buffer), 0);
         printf("Server: %s", buffer);
@@ -124,7 +124,7 @@ int main()
             continue;
         }
         // Transaction State
-        while(1)
+        while (1)
         {
             // send STAT command
             char stat[100];
@@ -148,8 +148,8 @@ int main()
             sprintf(list, "LIST\r\n");
             // send to server
             send(client_socket, list, strlen(list), 0);
-            // recieve the list of messages 
-            // recieve +OK number of messages 
+            // recieve the list of messages
+            // recieve +OK number of messages
             rec_msg = receive_message(client_socket);
             printf("%s\n", rec_msg);
             // error check
@@ -159,13 +159,49 @@ int main()
                 break;
             }
             // recieve in the format of Sl. No. <Sender’s email id> <When received, in date : hour : minute> <Subject>
-            for(int i=0;i<num;i++)
+            while (1)
             {
                 char *rec_msg = receive_message(client_socket);
                 printf("%s\n", rec_msg);
+                if (strstr(rec_msg, ".\r\n") != NULL)
+                {
+                    break;
+                }
             }
-
-
+            // for(int i=0; i<num; i++){
+            //     char *rec_msg = receive_message(client_socket);
+            //     printf("%s", rec_msg);
+            // }
+            printf("Enter the message number to read: ");
+            int choice;
+            scanf("%d", &choice);
+            // send RETR command
+            char retr[100];
+            sprintf(retr, "RETR %d\r\n", choice);
+            // send to server
+            send(client_socket, retr, strlen(retr), 0);
+            // recieve the message
+            rec_msg = receive_message(client_socket);
+            printf("%s\n", rec_msg);
+            // error check
+            if (strncmp(rec_msg, "-ERR", 4) == 0)
+            {
+                printf("Error in RETR command\n");
+                break;
+            }
+            else{
+                // recieve the message
+                while (1)
+                {
+                    char *rec_msg = receive_message(client_socket);
+                    printf("%s", rec_msg);
+                    if (strstr(rec_msg, ".\r\n") != NULL)
+                    {
+                        break;
+                    }
+                }
+            
+            }
         }
         // Close the client socket
         close(client_socket);
