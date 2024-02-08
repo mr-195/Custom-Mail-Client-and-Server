@@ -96,6 +96,7 @@ int main()
         // send USER : username
         char msg[100];
         sprintf(msg, "USER : %s\r\n", username);
+        printf("Sending Message: %s\n", msg);
         send(client_socket, msg, strlen(msg), 0);
         // Receive response
         char *rec_msg = receive_message(client_socket);
@@ -110,6 +111,7 @@ int main()
         // send password
         char pass[100];
         sprintf(pass, "PASS : %s\r\n", password);
+        printf("Sending Message: %s\n", pass);
         send(client_socket, pass, strlen(pass), 0);
         // Receive response
         rec_msg = receive_message(client_socket);
@@ -120,7 +122,7 @@ int main()
             printf("Password is incorrect\n");
             continue;
         }
-    
+
         // Close the client socket
         close(client_socket);
     }
