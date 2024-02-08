@@ -57,12 +57,13 @@ void parseMailbox(const char *filename, Email emails[], int *num_emails)
             strcpy(emails[emailindex].subject, current_email.subject);
             strcpy(emails[emailindex].body, current_email.body);
             current_email.num = emailindex + 1;
-            emails[emailindex].num=current_email.num;
+            emails[emailindex].num = current_email.num;
             emailindex++;
             // set current_email.body to empty
             strcpy(current_email.body, "");
         }
-        else{
+        else
+        {
             strcat(current_email.body, line);
         }
     }
@@ -83,9 +84,9 @@ void parseMailbox(const char *filename, Email emails[], int *num_emails)
 
 char *receive_message(int client_socket)
 {
-    char buffer[1024];        // Adjust buffer size as needed
-    char *msg = malloc(1024); // Allocate memory for message buffer
-
+    char buffer[1024];                // Adjust buffer size as needed
+    char *msg = (char *)malloc(1024); // Allocate memory for message buffer
+    memset(msg, '\0', 1024);
     if (msg == NULL)
     {
         perror("[-] Error in memory allocation");
@@ -118,6 +119,8 @@ char *receive_message(int client_socket)
         strcat(msg, buffer);
     }
 
+    printf("Message Recieved=> %s\n", msg);
+
     return msg;
 }
 void handle_client(int client_socket)
@@ -128,7 +131,7 @@ void handle_client(int client_socket)
 
     // Receive username
     char *rec_msg = receive_message(client_socket);
-    printf("%s\n", rec_msg);
+    printf("Username Recieved : %s\n", rec_msg);
     // msg : USER : username
     // check if username is valid
     // extract username from msg
@@ -149,6 +152,7 @@ void handle_client(int client_socket)
     while (fgets(line, sizeof(line), fp))
     {
         char *token = strtok(line, " ");
+        printf("Token is: %s\n", token);
         if (strcmp(token, username) == 0)
         {
             found = 1;
@@ -169,7 +173,7 @@ void handle_client(int client_socket)
     // receive password
 
     rec_msg = receive_message(client_socket);
-    printf("%s\n", rec_msg);
+    printf("password is => %s\n", rec_msg);
     // extract password from msg
     char password[100];
     sscanf(rec_msg, "PASS : %s\r\n", password);

@@ -83,6 +83,7 @@ int main()
             close(client_socket);
             exit(EXIT_FAILURE);
         }
+        // Authorization State
         char username[100];
         char password[100];
         printf("Enter username: ");
@@ -96,6 +97,7 @@ int main()
         // send USER : username
         char msg[100];
         sprintf(msg, "USER : %s\r\n", username);
+        printf("Sending Message: %s\n", msg);
         send(client_socket, msg, strlen(msg), 0);
         // Receive response
         char *rec_msg = receive_message(client_socket);
@@ -110,6 +112,7 @@ int main()
         // send password
         char pass[100];
         sprintf(pass, "PASS : %s\r\n", password);
+        printf("Sending Message: %s\n", pass);
         send(client_socket, pass, strlen(pass), 0);
         // Receive response
         rec_msg = receive_message(client_socket);
@@ -120,7 +123,42 @@ int main()
             printf("Password is incorrect\n");
             continue;
         }
-    
+        // Transaction State
+        while(1)
+        {
+            // send STAT command
+            char stat[100];
+            sprintf(stat, "STAT\r\n");
+            // send to server
+            send(client_socket, stat, strlen(stat), 0);
+            // recieve +OK num
+            char *rec_msg = receive_message(client_socket);
+            printf("%s\n", rec_msg);
+            // extract the number of messages
+            int num;
+            sscanf(rec_msg, "+OK %d", &num);
+            // error check
+            if (strncmp(rec_msg, "-ERR", 4) == 0)
+            {
+                printf("Error in STAT command\n");
+                break;
+            }
+            // send LIST command
+            char list[100];
+            sprintf(list, "LIST\r\n");
+            // send to server
+            send(client_socket, list, strlen(list), 0);
+            // recieve the list of messages 
+            for(int i=0;i<num;i++)
+            {
+                char *rec_msg = receive_message(client_socket);
+                printf("%s\n", rec_msg);
+            }
+
+
+
+
+        }
         // Close the client socket
         close(client_socket);
     }

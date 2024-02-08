@@ -14,6 +14,45 @@
 #define MAX_BUFFER_SIZE 4000
 #define MAX_SIZE 100
 
+char *receive_message(int client_socket)
+{
+    char buffer[1024];        // Adjust buffer size as needed
+    char *msg = malloc(1024); // Allocate memory for message buffer
+
+    if (msg == NULL)
+    {
+        perror("[-] Error in memory allocation");
+        exit(1);
+    }
+
+    memset(buffer, '\0', sizeof(buffer));
+
+    while (1)
+    {
+        memset(buffer, '\0', sizeof(buffer));
+        int n = recv(client_socket, buffer, sizeof(buffer), 0);
+        // break when EOF is reached
+        if (n == 0)
+        {
+            break; // Connection closed by the remote peer
+        }
+        else if (n < 0)
+        {
+            perror("[-] Error in receiving");
+            exit(1);
+        }
+        // Check for the end of a line (CRLF)
+        if (strstr(buffer, "\r\n") != NULL)
+        {
+            strcat(msg, buffer);
+            break;
+        }
+
+        strcat(msg, buffer);
+    }
+
+    return msg;
+}
 int isvalidmail(char from_line[], char to_line[], char subject_line[])
 {
     // printf("%s\n", from_line);
@@ -24,38 +63,38 @@ int isvalidmail(char from_line[], char to_line[], char subject_line[])
         printf("[-] Incorrect Format \n");
         return 0;
     }
-   
+
     // check X@Y
-    int cnt=0;
-    //count no of @
-    for(int i=0;i<strlen(from_line);i++)
+    int cnt = 0;
+    // count no of @
+    for (int i = 0; i < strlen(from_line); i++)
     {
-        if(from_line[i]=='@')
+        if (from_line[i] == '@')
             cnt++;
     }
-    if(cnt!=1)
+    if (cnt != 1)
     {
         printf("[-] Incorrect Format \n");
         return 0;
     }
     // check first letter of X@Y
-    if(from_line[6]=='@')
+    if (from_line[6] == '@')
     {
         printf("[-] Incorrect Format \n");
         return 0;
     }
-    cnt=0;
-    for(int i=0;i<strlen(to_line);i++)
+    cnt = 0;
+    for (int i = 0; i < strlen(to_line); i++)
     {
-        if(to_line[i]=='@')
+        if (to_line[i] == '@')
             cnt++;
     }
-    if(cnt!=1)
+    if (cnt != 1)
     {
         printf("[-] Incorrect Format \n");
         return 0;
     }
-    if(to_line[4]=='@')
+    if (to_line[4] == '@')
     {
         printf("[-] Incorrect Format \n");
         return 0;
@@ -106,15 +145,112 @@ int main(int argc, char *argv[])
 
     // connect with server
 
-    char username[100];
-    char password[100];
-    printf("Enter username: ");
-    scanf("%s", username);
-    printf("Enter password: ");
-    scanf("%s", password);
+    // char username[100];
+    // char password[100];
+    // printf("Enter username: ");
+    // scanf("%s", username);
+    // printf("Enter password: ");
+    // scanf("%s", password);
     while (1)
     {
-        int sockfd;
+        // int sockfd;
+        // struct sockaddr_in serv_addr;
+
+        // /* Opening a socket is exactly similar to the server process */
+        // if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        // {
+        //     perror("[-] Unable to create socket\n");
+        //     exit(0);
+        // }
+        // memset(&serv_addr, 0, sizeof(serv_addr));
+        // serv_addr.sin_family = AF_INET;
+        // inet_aton(argv[1], &serv_addr.sin_addr);
+        // serv_addr.sin_port = htons(atoi(argv[2]));
+
+        // if (connect(sockfd, (struct sockaddr *)&serv_addr,
+        //             sizeof(serv_addr)) < 0)
+        // {
+        //     perror("[-] Error in connecting to server");
+        //     exit(1);
+        // };
+        // create a socket for pop3 server as well
+
+        printf("Enter option:\n");
+        printf("1. Manage Mail\n");
+        printf("2. Send Mail\n");
+        printf("3. Quit\n");
+        int option;
+        scanf("%d", &option);
+
+        if (option == 1)
+        {
+            // to be implemented later
+            // connect to pop3 server
+            int sockfd_pop3;
+            struct sockaddr_in serv_addr_pop3;
+            char buffer[MAX_BUFFER_SIZE];
+            if ((sockfd_pop3 = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+            {
+                perror("[-] Unable to create socket\n");
+                exit(0);
+            }
+            memset(&serv_addr_pop3, 0, sizeof(serv_addr_pop3));
+            serv_addr_pop3.sin_family = AF_INET;
+            inet_aton(argv[1], &serv_addr_pop3.sin_addr);
+            serv_addr_pop3.sin_port = htons(atoi(argv[3]));
+            if (connect(sockfd_pop3, (struct sockaddr *)&serv_addr_pop3,
+                        sizeof(serv_addr_pop3)) < 0)
+            {
+                perror("[-] Error in connecting to server");
+                exit(1);
+            };
+            char username[100];
+            char password[100];
+            printf("Enter username: ");
+            scanf("%s", username);
+            printf("Enter password: ");
+            scanf("%s", password);
+            // Receive welcome message
+            recv(sockfd_pop3, buffer, sizeof(buffer), 0);
+            printf("Server: %s", buffer);
+            // Send username
+            // send USER : username
+            char msg[100];
+            sprintf(msg, "USER : %s\r\n", username);
+            printf("Sending Message: %s\n", msg);
+            send(sockfd_pop3, msg, strlen(msg), 0);
+            // Receive response
+            char *rec_msg = receive_message(sockfd_pop3);
+            printf("%s\n", rec_msg);
+            // check if username is valid
+            if (strncmp(rec_msg, "-ERR", 4) == 0)
+            {
+                printf("Username is incorrect\n");
+                continue;
+            }
+
+            // send password
+            char pass[100];
+            sprintf(pass, "PASS : %s\r\n", password);
+            printf("Sending Message: %s\n", pass);
+            send(sockfd_pop3, pass, strlen(pass), 0);
+            // Receive response
+            rec_msg = receive_message(sockfd_pop3);
+            printf("%s\n", rec_msg);
+            // check if password is valid
+            if (strncmp(rec_msg, "-ERR", 4) == 0)
+            {
+                printf("Password is incorrect\n");
+                continue;
+            }
+
+            // Close the client socket
+            close(sockfd_pop3);
+        }
+        else if (option == 2)
+        {
+            // connect to server
+             int sockfd;
         struct sockaddr_in serv_addr;
 
         /* Opening a socket is exactly similar to the server process */
@@ -134,44 +270,6 @@ int main(int argc, char *argv[])
             perror("[-] Error in connecting to server");
             exit(1);
         };
-        // create a socket for pop3 server as well
-        int sockfd_pop3;
-        struct sockaddr_in serv_addr_pop3;
-        if((sockfd_pop3 = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-        {
-            perror("[-] Unable to create socket\n");
-            exit(0);
-        }
-        memset(&serv_addr_pop3, 0, sizeof(serv_addr_pop3));
-        serv_addr_pop3.sin_family = AF_INET;
-        inet_aton(argv[1], &serv_addr_pop3.sin_addr);
-        serv_addr_pop3.sin_port = htons(atoi(argv[3]));
-
-        
-        printf("Enter option:\n");
-        printf("1. Manage Mail\n");
-        printf("2. Send Mail\n");
-        printf("3. Quit\n");
-        int option;
-        scanf("%d", &option);
-
-        if (option == 1)
-        {
-            // to be implemented later
-            // connect to pop3 server
-            if (connect(sockfd_pop3, (struct sockaddr *)&serv_addr_pop3,
-                    sizeof(serv_addr_pop3)) < 0)
-            {
-                perror("[-] Error in connecting to server");
-                exit(1);
-            };
-            
-
-
-        }
-        else if (option == 2)
-        {
-            // connect to server
             clearInputBuffer();
             char from_line[100];
             char to_line[100];
@@ -185,17 +283,9 @@ int main(int argc, char *argv[])
             // take input to line
             // clearInputBuffer();
             fgets(to_line, sizeof(to_line), stdin);
-            // printf("%s\n", to_line);
-            // printf("TO LINE::: %s\n", to_line);
-
-            // take input subject line
-            // clearInputBuffer();
+           
             fgets(subject_line, sizeof(subject_line), stdin);
-            // printf("SUBJECT LINE::: %s\n", subject_line);
-            // printf("%s\n", subject_line);
-
-            // take input message which ends with a single dot
-            // clearInputBuffer();
+           
             for (int i = 0; i < 50; ++i)
             {
                 fgets(message_lines[i], sizeof(message_lines[i]), stdin);
@@ -511,6 +601,7 @@ int main(int argc, char *argv[])
                 printf("[-] Error in QUIT\n");
                 continue;
             }
+            close(sockfd);
         }
         else if (option == 3)
         {
@@ -521,7 +612,7 @@ int main(int argc, char *argv[])
         {
             printf("[-] Invalid option\n");
         }
-        close(sockfd);
+        // close(sockfd);
     }
 
     return 0;
