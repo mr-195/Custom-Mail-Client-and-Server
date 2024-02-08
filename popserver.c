@@ -7,17 +7,19 @@
 #define POP_PORT 110
 #define MAX_BUFFER_SIZE 1024
 
-void handle_client(int client_socket) {
+char *receive_message(int client_socket)
+{
+    char buffer[1024];        // Adjust buffer size as needed
+    char *msg = malloc(1024); // Allocate memory for message buffer
 
+    if (msg == NULL)
+    {
+        perror("[-] Error in memory allocation");
+        exit(1);
+    }
 
-    // Send welcome message
-    send(client_socket, "+OK POP3 server ready\r\n", 24, 0);
-
-    // Receive username
-     char buffer[MAX_BUFFER_SIZE];
-    char msg[MAX_BUFFER_SIZE];
     memset(buffer, '\0', sizeof(buffer));
-    memset(msg, '\0', sizeof(msg));
+
     while (1)
     {
         memset(buffer, '\0', sizeof(buffer));
@@ -32,9 +34,6 @@ void handle_client(int client_socket) {
             perror("[-] Error in receiving");
             exit(1);
         }
-
-        // printf("Received: %s\n", buffer);
-
         // Check for the end of a line (CRLF)
         if (strstr(buffer, "\r\n") != NULL)
         {
@@ -44,12 +43,23 @@ void handle_client(int client_socket) {
 
         strcat(msg, buffer);
     }
-    printf("%s\n", msg);
+
+    return msg;
+}
+void handle_client(int client_socket) {
+
+
+    // Send welcome message
+    send(client_socket, "+OK POP3 server ready\r\n", 24, 0);
+
+    // Receive username
+    char *rec_msg=receive_message(client_socket);
+    printf("%s\n",rec_msg);
     // msg : USER : username
     // check if username is valid
     // extract username from msg
     char username[100];
-    sscanf(msg, "USER : %s\r\n", username);
+    sscanf(rec_msg, "USER : %s\r\n", username);
     // printf("Username: %s\n", username);
     // check if username is valid
     // find the username in the file where it is the first word of some line 
@@ -83,35 +93,12 @@ void handle_client(int client_socket) {
         exit(1);
     }
     // receive password
-    memset(buffer, '\0', sizeof(buffer));
-    memset(msg, '\0', sizeof(msg));
-    while(1)
-    {
-        memset(buffer, '\0', sizeof(buffer));
-        int n = recv(client_socket, buffer, sizeof(buffer), 0);
-        // break when EOF is reached
-        if (n == 0)
-        {
-            break; // Connection closed by the remote peer
-        }
-        else if (n < 0)
-        {
-            perror("[-] Error in receiving");
-            exit(1);
-        }
-        // Check for the end of a line (CRLF)
-        if (strstr(buffer, "\r\n") != NULL)
-        {
-            strcat(msg, buffer);
-            break;
-        }
-
-        strcat(msg, buffer);
-    }
-    printf("%s\n", msg);  
+   
+    rec_msg=receive_message(client_socket);
+    printf("%s\n", rec_msg);  
     // extract password from msg
     char password[100];
-    sscanf(msg, "PASS : %s\r\n", password);
+    sscanf(rec_msg, "PASS : %s\r\n", password);
     // printf("Password: %s\n", password);
     // check if password is valid for the username
     // find the username in the file where it is the first word of some line
