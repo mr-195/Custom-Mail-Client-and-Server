@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <time.h>
-#define POP_PORT 111
+#define POP_PORT 113
 #define MAX_BUFFER_SIZE 1024
 // define a structure to hold the messages of the user
 typedef struct
@@ -33,24 +33,29 @@ void parseMailbox(const char *filename, Email emails[], int *num_emails)
     {
         if (strncmp(line, "From: ", 6) == 0)
         {
-           sscanf(line, "From: %[^\n]", current_email.from);
+            sscanf(line, "From: %[^\n]", current_email.from);
+            // add CRLF to the end of the line
+            // strcat(current_email.from, "\r\n");
         }
         else if (strncmp(line, "To: ", 4) == 0)
         {
             sscanf(line, "To: %[^\n]", current_email.to);
+            // strcat(current_email.to, "\r\n");
         }
         else if (strncmp(line, "Recieved at: ", 13) == 0)
         {
             sscanf(line, "Recieved at: %[^\n]", current_email.received_at);
+            // strcat(current_email.received_at, "\r\n");
         }
         else if (strncmp(line, "Subject: ", 9) == 0)
         {
-           sscanf(line, "Subject: %[^\n]", current_email.subject);
+            sscanf(line, "Subject: %[^\n]", current_email.subject);
+            // strcat(current_email.subject, "\r\n");
         }
-        else if (strncmp(line, ".\n",2) == 0)
+        else if (strncmp(line, ".\n", 2) == 0)
         {
             // end of email reached add to array
-            strcat(current_email.body, line);
+            strcat(current_email.body,line);
             strcpy(emails[emailindex].from, current_email.from);
             strcpy(emails[emailindex].to, current_email.to);
             strcpy(emails[emailindex].received_at, current_email.received_at);
@@ -79,8 +84,6 @@ void parseMailbox(const char *filename, Email emails[], int *num_emails)
         printf("Subject: %s\n", emails[i].subject);
         printf("Body: %s\n", emails[i].body);
     }
-
-    
 
     fclose(fp);
 }
@@ -173,7 +176,6 @@ void handle_client(int client_socket)
         close(client_socket);
         exit(1);
     }
-    
 
     // receive password
 
@@ -224,10 +226,10 @@ void handle_client(int client_socket)
     int num_emails = 0;
     parseMailbox(username, emails, &num_emails);
 
-    //recieve STAT
+    // recieve STAT
     rec_msg = receive_message(client_socket);
     printf("STAT : %s\n", rec_msg);
-    if(strcmp(rec_msg, "STAT\r\n") == 0)
+    if (strcmp(rec_msg, "STAT\r\n") == 0)
     {
         char msg[100];
         sprintf(msg, "+OK %d %d\r\n", num_emails, 1000);
@@ -243,15 +245,15 @@ void handle_client(int client_socket)
     // recieve LIST
     rec_msg = receive_message(client_socket);
     printf("LIST : %s\n", rec_msg);
-    if(strcmp(rec_msg, "LIST\r\n") == 0)
+    if (strcmp(rec_msg, "LIST\r\n") == 0)
     {
         char msg[100];
         sprintf(msg, "+OK %d messages\r\n", num_emails);
         send(client_socket, msg, strlen(msg), 0);
         for (int i = 0; i < num_emails; i++)
         {
-            //send in the format of Sl. No. <Sender’s email id> <When received, in date : hour : minute> <Subject>
-            sprintf(msg, "%d %s %s %s\r\n", emails[i].num, emails[i].from, emails[i].received_at, emails[i].subject);
+            // send in the format of Sl. No. <Sender’s email id> <When received, in date : hour : minute> <Subject>
+            sprintf(msg, "%d %s %s %s \n", emails[i].num, emails[i].from, emails[i].received_at, emails[i].subject);
             send(client_socket, msg, strlen(msg), 0);
         }
         send(client_socket, ".\r\n", 3, 0);
@@ -268,7 +270,7 @@ void handle_client(int client_socket)
     printf("RETR : %s\n", rec_msg);
     int email_num;
     sscanf(rec_msg, "RETR %d\r\n", &email_num);
-    if(email_num > num_emails)
+    if (email_num > num_emails)
     {
         send(client_socket, "-ERR invalid email number\r\n", 27, 0);
         close(client_socket);
@@ -277,28 +279,29 @@ void handle_client(int client_socket)
     else
     {
         char msg[1000];
-        // memset(msg, 'c', 1000);
- 
-        // sprintf(msg, "+OK %d octets\r\n", strlen(emails[email_num - 1].body));
-        // send(client_socket, msg, strlen(msg), 0);
-        // send(client_socket, emails[email_num - 1].body, strlen(emails[email_num - 1].body), 0);
-        sprintf(msg,"From: %s\nTo: %s\nRecieved at: %s\nSubject: %s\r\n", emails[email_num - 1].from,emails[email_num-1].to, emails[email_num - 1].received_at, emails[email_num - 1].subject);
+        // send from 
+        sprintf(msg,"%s\r\n", emails[email_num-1].from);
         send(client_socket, msg, strlen(msg), 0);
-        // send body 
-        // memset(msg, '\0', 1000);
-        sprintf(msg, "%s\r\n", emails[email_num - 1].body);
-        // send(client_socket, msg, strlen(msg), 0);
-        send(client_socket, msg, strlen(emails[email_num - 1].body)+3, 0);
-
-        
-        // send(client_socket, ".\r\n", 3, 0);
+        // send to
+        sprintf(msg,"%s\r\n", emails[email_num-1].to);
+        send(client_socket, msg, strlen(msg), 0);
+        // send received at
+        sprintf(msg,"%s\r\n", emails[email_num-1].received_at);
+        send(client_socket, msg, strlen(msg), 0);
+        // send subject
+        sprintf(msg,"%s\r\n", emails[email_num-1].subject);
+        send(client_socket, msg, strlen(msg), 0);
+        // send body
+        sprintf(msg,"%s\r\n", emails[email_num-1].body);
+        send(client_socket, msg, strlen(msg), 0);
     }
+    printf("Message sent\n");
 
-    // //recieve DELETE 
-    // rec_msg = receive_message(client_socket);
-    // printf("DELE : %s\n", rec_msg);
+    //    recieve DELETE
+    rec_msg = receive_message(client_socket);
+    printf("DELE : %s\n", rec_msg);
     // sscanf(rec_msg, "DELE %d\r\n", &email_num);
-    // if(email_num > num_emails)
+    // if (email_num > num_emails)
     // {
     //     send(client_socket, "-ERR invalid email number\r\n", 27, 0);
     //     close(client_socket);
@@ -322,7 +325,6 @@ void handle_client(int client_socket)
     //     close(client_socket);
     //     exit(1);
     // }
-
 
     // Close the client socket
     close(client_socket);

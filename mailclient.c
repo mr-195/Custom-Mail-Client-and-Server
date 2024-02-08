@@ -153,27 +153,27 @@ int main(int argc, char *argv[])
     // scanf("%s", password);
     while (1)
     {
-        // int sockfd;
-        // struct sockaddr_in serv_addr;
+        int sockfd;
+        struct sockaddr_in serv_addr;
 
-        // /* Opening a socket is exactly similar to the server process */
-        // if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-        // {
-        //     perror("[-] Unable to create socket\n");
-        //     exit(0);
-        // }
-        // memset(&serv_addr, 0, sizeof(serv_addr));
-        // serv_addr.sin_family = AF_INET;
-        // inet_aton(argv[1], &serv_addr.sin_addr);
-        // serv_addr.sin_port = htons(atoi(argv[2]));
+        /* Opening a socket is exactly similar to the server process */
+        if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        {
+            perror("[-] Unable to create socket\n");
+            exit(0);
+        }
+        memset(&serv_addr, 0, sizeof(serv_addr));
+        serv_addr.sin_family = AF_INET;
+        inet_aton(argv[1], &serv_addr.sin_addr);
+        serv_addr.sin_port = htons(atoi(argv[2]));
 
-        // if (connect(sockfd, (struct sockaddr *)&serv_addr,
-        //             sizeof(serv_addr)) < 0)
-        // {
-        //     perror("[-] Error in connecting to server");
-        //     exit(1);
-        // };
-        // create a socket for pop3 server as well
+        if (connect(sockfd, (struct sockaddr *)&serv_addr,
+                    sizeof(serv_addr)) < 0)
+        {
+            perror("[-] Error in connecting to server");
+            exit(1);
+        };
+        create a socket for pop3 server as well
 
         printf("Enter option:\n");
         printf("1. Manage Mail\n");
@@ -250,26 +250,26 @@ int main(int argc, char *argv[])
         else if (option == 2)
         {
             // connect to server
-             int sockfd;
-        struct sockaddr_in serv_addr;
+        //      int sockfd;
+        // struct sockaddr_in serv_addr;
 
-        /* Opening a socket is exactly similar to the server process */
-        if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-        {
-            perror("[-] Unable to create socket\n");
-            exit(0);
-        }
-        memset(&serv_addr, 0, sizeof(serv_addr));
-        serv_addr.sin_family = AF_INET;
-        inet_aton(argv[1], &serv_addr.sin_addr);
-        serv_addr.sin_port = htons(atoi(argv[2]));
+        // /* Opening a socket is exactly similar to the server process */
+        // if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        // {
+        //     perror("[-] Unable to create socket\n");
+        //     exit(0);
+        // }
+        // memset(&serv_addr, 0, sizeof(serv_addr));
+        // serv_addr.sin_family = AF_INET;
+        // inet_aton(argv[1], &serv_addr.sin_addr);
+        // serv_addr.sin_port = htons(atoi(argv[2]));
 
-        if (connect(sockfd, (struct sockaddr *)&serv_addr,
-                    sizeof(serv_addr)) < 0)
-        {
-            perror("[-] Error in connecting to server");
-            exit(1);
-        };
+        // if (connect(sockfd, (struct sockaddr *)&serv_addr,
+        //             sizeof(serv_addr)) < 0)
+        // {
+        //     perror("[-] Error in connecting to server");
+        //     exit(1);
+        // };
             clearInputBuffer();
             char from_line[100];
             char to_line[100];
@@ -278,19 +278,25 @@ int main(int argc, char *argv[])
 
             // take input from line
             fgets(from_line, sizeof(from_line), stdin);
-            // printf("FROM LINE::: %s\n", from_line);
-
-            // take input to line
-            // clearInputBuffer();
+            // remove newline character from the end
+            from_line[strlen(from_line) - 1] = '\0';
+            // add <CRLF> at the end
+            strcat(from_line, "\r\n");
             fgets(to_line, sizeof(to_line), stdin);
+            to_line[strlen(to_line) - 1] = '\0';
+            strcat(to_line, "\r\n");
            
             fgets(subject_line, sizeof(subject_line), stdin);
+            subject_line[strlen(subject_line) - 1] = '\0';
+            strcat(subject_line, "\r\n");
            
             for (int i = 0; i < 50; ++i)
             {
                 fgets(message_lines[i], sizeof(message_lines[i]), stdin);
+                message_lines[i][strlen(message_lines[i]) - 1] = '\0';
+                strcat(message_lines[i], "\r\n");
                 // printf("MESSAGE LINE :: %s\n", message_lines[i]);
-                if (strcmp(message_lines[i], ".\n") == 0)
+                if (strcmp(message_lines[i], ".\r\n") == 0)
                     break;
             }
             // printf("INPUT TAKEN\n");
@@ -518,7 +524,7 @@ int main(int argc, char *argv[])
             for (int i = 0; i < 50; ++i)
             {
                 send(sockfd, message_lines[i], strlen(message_lines[i]), 0);
-                if (strcmp(message_lines[i], ".\n") == 0)
+                if (strcmp(message_lines[i], ".\r\n") == 0)
                     break;
             }
             // receive acknowkledgement from server 250 OK Message accepted for delivery
