@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <time.h>
-#define POP_PORT 110
+#define POP_PORT 111
 #define MAX_BUFFER_SIZE 1024
 // define a structure to hold the messages of the user
 typedef struct
@@ -276,13 +276,23 @@ void handle_client(int client_socket)
     }
     else
     {
-        char msg[100];
-        sprintf(msg, "+OK %d octets\r\n", strlen(emails[email_num - 1].body));
+        char msg[1000];
+        // memset(msg, 'c', 1000);
+ 
+        // sprintf(msg, "+OK %d octets\r\n", strlen(emails[email_num - 1].body));
+        // send(client_socket, msg, strlen(msg), 0);
+        // send(client_socket, emails[email_num - 1].body, strlen(emails[email_num - 1].body), 0);
+        sprintf(msg,"From: %s\nTo: %s\nRecieved at: %s\nSubject: %s\r\n", emails[email_num - 1].from,emails[email_num-1].to, emails[email_num - 1].received_at, emails[email_num - 1].subject);
         send(client_socket, msg, strlen(msg), 0);
-        send(client_socket, emails[email_num - 1].body, strlen(emails[email_num - 1].body), 0);
+        // send body 
+        // memset(msg, '\0', 1000);
+        sprintf(msg, "%s\r\n", emails[email_num - 1].body);
+        // send(client_socket, msg, strlen(msg), 0);
+        send(client_socket, msg, strlen(emails[email_num - 1].body)+3, 0);
+
+        
         // send(client_socket, ".\r\n", 3, 0);
     }
-
 
     // //recieve DELETE 
     // rec_msg = receive_message(client_socket);

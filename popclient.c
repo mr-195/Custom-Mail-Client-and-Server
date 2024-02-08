@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 
 #define POP_SERVER_IP "127.0.0.1"
-#define POP_PORT 110
+#define POP_PORT 111
 #define MAX_BUFFER_SIZE 1024
 
 char *receive_message(int client_socket)
@@ -191,17 +191,24 @@ int main()
             }
             else{
                 // recieve the message
-                while (1)
-                {
-                    char *rec_msg = receive_message(client_socket);
-                    printf("%s", rec_msg);
-                    if (strstr(rec_msg, ".\r\n") != NULL)
-                    {
-                        break;
-                    }
-                }
+                // while (1)
+                // {
+                //     char *rec_msg = receive_message(client_socket);
+                //     printf("%s", rec_msg);
+                //     if (strstr(rec_msg, ".\r\n") != NULL)
+                //     {
+                //         break;
+                //     }
+                // }
+                rec_msg = receive_message(client_socket);
+                printf("%s\n", rec_msg);
+                // recieve body also
+                rec_msg = receive_message(client_socket);
+                printf("%s\n", rec_msg);
+                
             
             }
+         
         }
         // Close the client socket
         close(client_socket);
