@@ -28,27 +28,29 @@ void parseMailbox(const char *filename, Email emails[], int *num_emails)
     Email current_email;
     char line[1000];
     int emailindex = 0;
+    strcpy(current_email.body, "");
     while (fgets(line, sizeof(line), fp) != NULL)
     {
         if (strncmp(line, "From: ", 6) == 0)
         {
-            sscanf(line, "From: %s", current_email.from);
+           sscanf(line, "From: %[^\n]", current_email.from);
         }
         else if (strncmp(line, "To: ", 4) == 0)
         {
-            sscanf(line, "To: %s", current_email.to);
+            sscanf(line, "To: %[^\n]", current_email.to);
         }
         else if (strncmp(line, "Recieved at: ", 13) == 0)
         {
-            sscanf(line, "Recieved at: %s", current_email.received_at);
+            sscanf(line, "Recieved at: %[^\n]", current_email.received_at);
         }
         else if (strncmp(line, "Subject: ", 9) == 0)
         {
-            sscanf(line, "Subject: %s", current_email.subject);
+           sscanf(line, "Subject: %[^\n]", current_email.subject);
         }
-        else if (strcmp(line, ".\n") == 0)
+        else if (strncmp(line, ".\n",2) == 0)
         {
             // end of email reached add to array
+            strcat(current_email.body, line);
             strcpy(emails[emailindex].from, current_email.from);
             strcpy(emails[emailindex].to, current_email.to);
             strcpy(emails[emailindex].received_at, current_email.received_at);
@@ -57,6 +59,8 @@ void parseMailbox(const char *filename, Email emails[], int *num_emails)
             current_email.num = emailindex + 1;
             emails[emailindex].num=current_email.num;
             emailindex++;
+            // set current_email.body to empty
+            strcpy(current_email.body, "");
         }
         else{
             strcat(current_email.body, line);
