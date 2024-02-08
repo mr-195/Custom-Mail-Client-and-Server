@@ -150,13 +150,20 @@ int main()
             send(client_socket, list, strlen(list), 0);
             // recieve the list of messages 
             // recieve +OK number of messages 
+            rec_msg = receive_message(client_socket);
+            printf("%s\n", rec_msg);
+            // error check
+            if (strncmp(rec_msg, "-ERR", 4) == 0)
+            {
+                printf("Error in LIST command\n");
+                break;
+            }
+            // recieve in the format of Sl. No. <Sender’s email id> <When received, in date : hour : minute> <Subject>
             for(int i=0;i<num;i++)
             {
                 char *rec_msg = receive_message(client_socket);
                 printf("%s\n", rec_msg);
             }
-
-
 
 
         }
