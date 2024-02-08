@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 
 #define POP_SERVER_IP "127.0.0.1"
-#define POP_PORT 113
+#define POP_PORT 114
 #define MAX_BUFFER_SIZE 1024
 
 char *receive_message(int client_socket)
@@ -46,7 +46,6 @@ char *receive_message(int client_socket)
             strcat(msg, buffer);
             break;
         }
-
         strcat(msg, buffer);
     }
 
@@ -84,8 +83,8 @@ int main()
             exit(EXIT_FAILURE);
         }
         // Authorization State
-        char username[100]="Utsav";
-        char password[100]="MacOS";
+        char username[100] = "Manaswi";
+        char password[100] = "Linux";
         // printf("Enter username: ");
         // scanf("%s", username);
         // printf("Enter password: ");
@@ -181,7 +180,7 @@ int main()
             // send to server
             send(client_socket, retr, strlen(retr), 0);
             // recieve the message
-            rec_msg = receive_message(client_socket);
+            rec_msg = receive_message(client_socket); // +OK message follows
             printf("%s\n", rec_msg);
             // error check
             if (strncmp(rec_msg, "-ERR", 4) == 0)
@@ -189,58 +188,59 @@ int main()
                 printf("Error in RETR command\n");
                 break;
             }
-            else{
-              // receive from
-                char *rec_msg = receive_message(client_socket);
-                printf("%s", rec_msg);
-                // receive to
-                rec_msg = receive_message(client_socket);
-                printf("%s", rec_msg);
-                // receive received at
-                rec_msg = receive_message(client_socket);
-                printf("%s", rec_msg);
-                // receive subject
-                rec_msg = receive_message(client_socket);
-                printf("%s", rec_msg);
-                // receive message
-                rec_msg = receive_message(client_socket);
-                printf("%s", rec_msg);
+            else
+            {
+                // clear rec_msg
+                // rec_msg = "";
+                // rec_msg = receive_message(client_socket);
+                // printf("%s", rec_msg);
             }
-            printf("Here \n");
-             char cl;
-          // DELETE message
+            // printf("Here \n");
+            char cl;
+            // DELETE message
             printf("Enter a character to delete the message: \n");
             // scanf("%c",&cl);
-            cl='d';
-            char dele[100];
-            sprintf(dele,"DELE %d\r\n",choice);
+            getchar();
+            cl = getchar();
+            if (cl == 'd')
+            {
+                // send DELE command
+                char dele[100];
+                sprintf(dele, "DELE %d\r\n", choice);
+                // send to server
+                send(client_socket, dele, strlen(dele), 0);
+                // recieve the message
+                rec_msg = receive_message(client_socket);
+                printf("%s\n", rec_msg);
+                // error check
+                if (strncmp(rec_msg, "-ERR", 4) == 0)
+                {
+                    printf("Error in DELE command\n");
+                    break;
+                }
+                printf("Message deleted\n");
+            }
+            else
+            {
+                printf("Message not deleted\n");
+            }
 
-            // send to server
-             send(client_socket, dele, strlen(dele), 0);
-            // recieve the message
-            // rec_msg = receive_message(client_socket);
-            // printf("%s\n", rec_msg);
-            // clear buffer
-            // while ((cl = getchar()) != '\n' && cl != EOF);
-            // char ch=getchar();
-            // if(ch=='d'){
-            //     // send DELE command
-            //     char dele[100];
-            //     sprintf(dele,"DELE %d\r\n",choice);
-            //     // send to server
-            //     send(client_socket, dele, strlen(dele), 0);
-            //     // recieve the message
-            //     // rec_msg = receive_message(client_socket);
-            //     printf("%s\n", rec_msg);
-            //     // error check
-            //     if (strncmp(rec_msg, "-ERR", 4) == 0)
-            //     {
-            //         printf("Error in DELE command\n");
-            //         break;
-            //     }
+            // send DELE command
+                char quit[100];
+                sprintf(quit, "QUIT\r\n");
+                // send to server
+                send(client_socket, quit, strlen(quit), 0);
+                // recieve the message
+                rec_msg = receive_message(client_socket);
+                printf("Recieved Message: %s\n", rec_msg);
+                // error check
+                if (strncmp(rec_msg, "-ERR", 4) == 0)
+                {
+                    printf("Error in QUIT command\n");
+                    break;
+                }
+            
             // }
-           
-         
         }
         // Close the client socket
         close(client_socket);
