@@ -134,7 +134,20 @@ int main(int argc, char *argv[])
             perror("[-] Error in connecting to server");
             exit(1);
         };
+        // create a socket for pop3 server as well
+        int sockfd_pop3;
+        struct sockaddr_in serv_addr_pop3;
+        if((sockfd_pop3 = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        {
+            perror("[-] Unable to create socket\n");
+            exit(0);
+        }
+        memset(&serv_addr_pop3, 0, sizeof(serv_addr_pop3));
+        serv_addr_pop3.sin_family = AF_INET;
+        inet_aton(argv[1], &serv_addr_pop3.sin_addr);
+        serv_addr_pop3.sin_port = htons(atoi(argv[3]));
 
+        
         printf("Enter option:\n");
         printf("1. Manage Mail\n");
         printf("2. Send Mail\n");
@@ -145,6 +158,16 @@ int main(int argc, char *argv[])
         if (option == 1)
         {
             // to be implemented later
+            // connect to pop3 server
+            if (connect(sockfd_pop3, (struct sockaddr *)&serv_addr_pop3,
+                    sizeof(serv_addr_pop3)) < 0)
+            {
+                perror("[-] Error in connecting to server");
+                exit(1);
+            };
+            
+
+
         }
         else if (option == 2)
         {
