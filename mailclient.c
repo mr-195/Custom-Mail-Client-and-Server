@@ -70,7 +70,7 @@ char *receive_message2(int sockfd_pop3)
     {
         memset(buffer, '\0', sizeof(buffer));
         // recieve maximum 23 bytes
-        int n = recv(sockfd_pop3, buffer,18, 0);
+        int n = recv(sockfd_pop3, buffer, 18, 0);
         // break when EOF is reached
         if (n == 0)
         {
@@ -342,16 +342,30 @@ int main(int argc, char *argv[])
                         break;
                     }
                     printf("Message deleted\n");
+                    // send to update 
+                    char quit[100];
+                    sprintf(quit, "QUIT\r\n");
+                    // send to server
+                    send(sockfd_pop3, quit, strlen(quit), 0);
+                    printf("Recieved Message: %s\n", rec_msg);
+                    // recieve the message
+                    rec_msg = receive_message(sockfd_pop3);
+                    // error check
+                    if (strncmp(rec_msg, "-ERR", 4) == 0)
+                    {
+                        printf("Error in QUIT command\n");
+                        continue;
+                    }
                 }
-                else
+                else if (cl == 'q')
                 {
                     char dele[100];
-                    sprintf(dele, "DELE %d\r\n", 0);
+                    sprintf(dele, "DELE %d\r\n", 0); // dont delete any message
                     send(sockfd_pop3, dele, strlen(dele), 0);
                     // recieve the message
                     rec_msg = receive_message(sockfd_pop3);
                     printf("%s\n", rec_msg);
-                    printf("Enter again\n");
+                    // send QUit command
                     char quit[100];
                     sprintf(quit, "QUIT\r\n");
                     // send to server
@@ -365,22 +379,31 @@ int main(int argc, char *argv[])
                         printf("Error in QUIT command\n");
                         break;
                     }
-                    continue;
-                }
-
-                // send QUit command
-                char quit[100];
-                sprintf(quit, "QUIT\r\n");
-                // send to server
-                send(sockfd_pop3, quit, strlen(quit), 0);
-                // recieve the message
-                rec_msg = receive_message(sockfd_pop3);
-                printf("Recieved Message: %s\n", rec_msg);
-                // error check
-                if (strncmp(rec_msg, "-ERR", 4) == 0)
-                {
-                    printf("Error in QUIT command\n");
                     break;
+                }
+                else
+                {
+                    printf("Invalid option\n");
+                    // send false delete
+                    char dele[100];
+                    sprintf(dele, "DELE %d\r\n", 0); // dont delete any message
+                    send(sockfd_pop3, dele, strlen(dele), 0);
+                    // recieve the message
+                    rec_msg = receive_message(sockfd_pop3);
+                    printf("%s\n", rec_msg);
+                    char quit[100];
+                    sprintf(quit, "QUIT 0\r\n");
+                    // send to server
+                    send(sockfd_pop3, quit, strlen(quit), 0);
+                    // recieve the message
+                    rec_msg = receive_message(sockfd_pop3);
+                    printf("Recieved Message: %s\n", rec_msg);
+                    // error check
+                    if (strncmp(rec_msg, "-ERR", 4) == 0)
+                    {
+                        printf("Error in QUIT command\n");
+                        continue;
+                    }
                 }
             }
             // Close the client socket

@@ -322,16 +322,16 @@ void handle_client(int client_socket)
         if (email_num == 0)
         {
             send(client_socket, "-ERR invalid email number\r\n", 27, 0);
-            break;
+            // break;
             // close(client_socket);
         }
-        if (email_num > num_emails)
+        if (email_num > num_emails && email_num!=0)
         {
             send(client_socket, "-ERR invalid email number\r\n", 27, 0);
             close(client_socket);
             exit(1);
         }
-        else
+        else if(email_num!=0)
         {
             emails[email_num - 1].num = 0;
             // num_emails--;
@@ -371,9 +371,7 @@ void handle_client(int client_socket)
         }
         else
         {
-            send(client_socket, "-ERR invalid command\r\n", 23, 0);
-            close(client_socket);
-            exit(1);
+            send(client_socket, "You Deleted Message\r\n",30,0);
         }
     }
 
