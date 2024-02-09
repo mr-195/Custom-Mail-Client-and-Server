@@ -269,19 +269,6 @@ int main(int argc, char *argv[])
                     printf("Error in LIST command\n");
                     break;
                 }
-                // printf("List of messages:\n");
-                // recieve in the format of Sl. No. <Sender’s email id> <When received, in date : hour : minute> <Subject>
-                // char *list_msg ;
-                // while (1)
-                // {
-                //     char *rec_msg = receive_message2(sockfd_pop3);
-                //     // printf("%s\n", rec_msg);
-                //     if (strstr(rec_msg, ".\r\n") != NULL)
-                //     {
-                //         list_msg = rec_msg;
-                //         break;
-                //     }
-                // }
                 rec_msg = receive_message(sockfd_pop3); // this is not breaking
                 // store it in a variable
                 char *list_msg = rec_msg;
