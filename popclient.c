@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 
 #define POP_SERVER_IP "127.0.0.1"
-#define POP_PORT 114
+#define POP_PORT 115
 #define MAX_BUFFER_SIZE 1024
 
 char *receive_message(int client_socket)
@@ -222,24 +222,25 @@ int main()
             }
             else
             {
-                printf("Message not deleted\n");
+                printf("Enter again\n");
+                continue;
             }
 
             // send DELE command
-                char quit[100];
-                sprintf(quit, "QUIT\r\n");
-                // send to server
-                send(client_socket, quit, strlen(quit), 0);
-                // recieve the message
-                rec_msg = receive_message(client_socket);
-                printf("Recieved Message: %s\n", rec_msg);
-                // error check
-                if (strncmp(rec_msg, "-ERR", 4) == 0)
-                {
-                    printf("Error in QUIT command\n");
-                    break;
-                }
-            
+            char quit[100];
+            sprintf(quit, "QUIT\r\n");
+            // send to server
+            send(client_socket, quit, strlen(quit), 0);
+            // recieve the message
+            rec_msg = receive_message(client_socket);
+            printf("Recieved Message: %s\n", rec_msg);
+            // error check
+            if (strncmp(rec_msg, "-ERR", 4) == 0)
+            {
+                printf("Error in QUIT command\n");
+                break;
+            }
+
             // }
         }
         // Close the client socket
