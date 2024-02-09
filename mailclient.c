@@ -53,10 +53,49 @@ char *receive_message(int sockfd_pop3)
 
     return msg;
 }
+char *receive_message2(int sockfd_pop3)
+{
+    char buffer[1024];        // Adjust buffer size as needed
+    char *msg = malloc(1024); // Allocate memory for message buffer
+
+    if (msg == NULL)
+    {
+        perror("[-] Error in memory allocation");
+        exit(1);
+    }
+
+    memset(buffer, '\0', sizeof(buffer));
+
+    while (1)
+    {
+        memset(buffer, '\0', sizeof(buffer));
+        // recieve maximum 23 bytes
+        int n = recv(sockfd_pop3, buffer,18, 0);
+        // break when EOF is reached
+        if (n == 0)
+        {
+            break; // Connection closed by the remote peer
+        }
+        else if (n < 0)
+        {
+            perror("[-] Error in receiving");
+            exit(1);
+        }
+        // Check for the end of a line (CRLF)
+        if (strstr(buffer, ".\r\n") != NULL)
+        {
+            strcat(msg, buffer);
+            break;
+        }
+
+        strcat(msg, buffer);
+    }
+
+    return msg;
+}
 int isvalidmail(char from_line[], char to_line[], char subject_line[])
 {
-    // printf("%s\n", from_line);
-    // printf("%s\n", to_line);
+
     // printf("%s\n", subject_line);
     if (strncmp(from_line, "From:", 5) != 0 || strncmp(to_line, "To:", 3) != 0 || strncmp(subject_line, "Subject:", 8) != 0)
     {
@@ -120,17 +159,17 @@ int main(int argc, char *argv[])
         printf("[-] Usage: %s <server IP> <smtp port> <pop3 port>\n", argv[0]);
         exit(1);
     }
+    char username[100];
+    char password[100];
+    printf("Enter username: ");
+    scanf("%s", username);
+    printf("Enter password: ");
+    scanf("%s", password);
 
     while (1)
     {
 
         //  create a socket for pop3 server as well
-        char username[100];
-        char password[100];
-        printf("Enter username: ");
-        scanf("%s", username);
-        printf("Enter password: ");
-        scanf("%s", password);
 
         printf("Enter option:\n");
         printf("1. Manage Mail\n");
@@ -161,12 +200,7 @@ int main(int argc, char *argv[])
                 perror("[-] Error in connecting to server");
                 exit(1);
             };
-            // char username[100];
-            // char password[100];
-            // printf("Enter username: ");
-            // scanf("%s", username);
-            // printf("Enter password: ");
-            // scanf("%s", password);
+
             // Receive welcome message
             recv(sockfd_pop3, buffer, sizeof(buffer), 0);
             printf("Server: %s", buffer);
@@ -201,7 +235,7 @@ int main(int argc, char *argv[])
                 continue;
             }
             // Transaction State
-            while (1) // command loop
+            while (1)
             {
                 // send STAT command
                 char stat[100];
@@ -227,7 +261,7 @@ int main(int argc, char *argv[])
                 send(sockfd_pop3, list, strlen(list), 0);
                 // recieve the list of messages
                 // recieve +OK number of messages
-                rec_msg = receive_message(sockfd_pop3);
+                rec_msg = receive_message2(sockfd_pop3);
                 printf("%s\n", rec_msg);
                 // error check
                 if (strncmp(rec_msg, "-ERR", 4) == 0)
@@ -235,19 +269,29 @@ int main(int argc, char *argv[])
                     printf("Error in LIST command\n");
                     break;
                 }
+                // printf("List of messages:\n");
                 // recieve in the format of Sl. No. <Sender’s email id> <When received, in date : hour : minute> <Subject>
-                while (1)
-                {
-                    char *rec_msg = receive_message(sockfd_pop3);
-                    printf("%s\n", rec_msg);
-                    if (strstr(rec_msg, ".\r\n") != NULL)
-                    {
-                        break;
-                    }
-                }
+                // char *list_msg ;
+                // while (1)
+                // {
+                //     char *rec_msg = receive_message2(sockfd_pop3);
+                //     // printf("%s\n", rec_msg);
+                //     if (strstr(rec_msg, ".\r\n") != NULL)
+                //     {
+                //         list_msg = rec_msg;
+                //         break;
+                //     }
+                // }
+                rec_msg = receive_message(sockfd_pop3); // this is not breaking
+                // store it in a variable
+                char *list_msg = rec_msg;
+                // printf("Here!\n");
+                printf("%s\n", list_msg);
+
                 printf("Enter the message number to read: ");
                 int choice;
                 scanf("%d", &choice);
+                getchar();
                 if (choice == -1)
                 {
                     // go back to main menu
@@ -279,7 +323,7 @@ int main(int argc, char *argv[])
                 // DELETE message
                 printf("Enter a character to delete the message: \n");
                 // scanf("%c",&cl);
-                getchar();
+                // getchar();
                 cl = getchar();
                 if (cl == 'd')
                 {
@@ -301,11 +345,30 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
+                    char dele[100];
+                    sprintf(dele, "DELE %d\r\n", 0);
+                    send(sockfd_pop3, dele, strlen(dele), 0);
+                    // recieve the message
+                    rec_msg = receive_message(sockfd_pop3);
+                    printf("%s\n", rec_msg);
                     printf("Enter again\n");
+                    char quit[100];
+                    sprintf(quit, "QUIT\r\n");
+                    // send to server
+                    send(sockfd_pop3, quit, strlen(quit), 0);
+                    // recieve the message
+                    rec_msg = receive_message(sockfd_pop3);
+                    printf("Recieved Message: %s\n", rec_msg);
+                    // error check
+                    if (strncmp(rec_msg, "-ERR", 4) == 0)
+                    {
+                        printf("Error in QUIT command\n");
+                        break;
+                    }
                     continue;
                 }
 
-                // send DELE command
+                // send QUit command
                 char quit[100];
                 sprintf(quit, "QUIT\r\n");
                 // send to server
@@ -320,7 +383,6 @@ int main(int argc, char *argv[])
                     break;
                 }
             }
-
             // Close the client socket
             close(sockfd_pop3);
         }

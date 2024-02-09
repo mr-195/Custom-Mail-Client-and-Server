@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <time.h>
-#define POP_PORT 115
+#define POP_PORT 117
 #define MAX_BUFFER_SIZE 1024
 // define a structure to hold the messages of the user
 typedef struct
@@ -129,7 +129,6 @@ void handle_client(int client_socket)
     printf("Username Recieved : %s\n", rec_msg);
     // msg : USER : username
     // check if username is valid
-    // extract username from msg
     char username[100];
     sscanf(rec_msg, "USER : %s\r\n", username);
     // printf("Username: %s\n", username);
@@ -213,11 +212,11 @@ void handle_client(int client_socket)
     strcat(username, "/mymailbox");
     Email emails[100];
     int num_emails = 0;
-    parseMailbox(username, emails, &num_emails);
 
     // recieve STAT
     while (1)
     {
+        parseMailbox(username, emails, &num_emails);
         rec_msg = receive_message(client_socket);
         printf("STAT : %s\n", rec_msg);
         if (strcmp(rec_msg, "STAT\r\n") == 0)
@@ -239,19 +238,15 @@ void handle_client(int client_socket)
         if (strcmp(rec_msg, "LIST\r\n") == 0)
         {
             char msg[100];
-            sprintf(msg, "+OK %d messages\r\n", num_emails);
+            sprintf(msg, "+OK %d messages .\r\n", num_emails);
             send(client_socket, msg, strlen(msg), 0);
             int cnt = 0;
             for (int i = 0; i < num_emails; i++)
             {
-                // send in the format of Sl. No. <Sender’s email id> <When received, in date : hour : minute> <Subject>
-                // if (emails[i].num == 0)
-                // {
-                //     continue;
-                // }
+                
                 cnt++;
                 emails[i].num = cnt;
-                sprintf(msg, "%d %s %s %s \r\n", emails[i].num, emails[i].from, emails[i].received_at, emails[i].subject);
+                sprintf(msg, "%d %s %s %s \n", emails[i].num, emails[i].from, emails[i].received_at, emails[i].subject);
                 send(client_socket, msg, strlen(msg), 0);
             }
             // num_emails=cnt;
@@ -324,6 +319,12 @@ void handle_client(int client_socket)
         rec_msg = receive_message(client_socket);
         printf("DELE : %s\n", rec_msg);
         sscanf(rec_msg, "DELE %d\r\n", &email_num);
+        if (email_num == 0)
+        {
+            send(client_socket, "-ERR invalid email number\r\n", 27, 0);
+            break;
+            // close(client_socket);
+        }
         if (email_num > num_emails)
         {
             send(client_socket, "-ERR invalid email number\r\n", 27, 0);
