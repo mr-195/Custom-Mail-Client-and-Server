@@ -25,11 +25,11 @@ Look at the client Terminal
 
 3) For Sending Mails press 2
 4) Then enter the mail message in the appropriate format
-   From: <SendersMail>
-   To: <username@blahblah>
-   Subject: <Enter Subject>
-   Body
-   .
+   - From: <SendersMail>
+   - To: <username@blahblah>
+   - Subject: <Enter Subject>
+   - Body
+   - .
 5) After this press enter You will SMTP protocols messages both in the client and server side
 6) If you press option 1 for manage mail
 7) You will see the list of message list in the mail box in the format
