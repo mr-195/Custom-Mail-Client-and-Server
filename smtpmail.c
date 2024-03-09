@@ -236,24 +236,20 @@ void handleClient(int clientSocket)
         int n = recv(clientSocket, buffer, sizeof(buffer), 0);
         // break when EOF is reached
         if (n == 0)
+            break;
+        if (n < 0)
         {
-            break; // Connection closed by the remote peer
-        }
-        else if (n < 0)
-        {
-            perror("[-] Error in receiving");
+            perror("[-] Error in receiving\n");
             exit(1);
         }
-        // Check for the end of a line (CRLF)
-        if (strstr(buffer, "\r\n") != NULL)
+        if (buffer[n - 1] == '\n' && buffer[n - 2] == '.')
         {
+            buffer[n - 1] = '\0';
             strcat(msg, buffer);
             break;
         }
-
         strcat(msg, buffer);
     }
-
     printf("%s\n", msg);
     char username[100];
     int i = 0;
