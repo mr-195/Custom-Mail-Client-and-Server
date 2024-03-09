@@ -378,12 +378,17 @@ void handle_client(int client_socket)
     // Close the client socket
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+    if (argc != 2)
+    {
+        printf("[-] Usage : server [PORTNO]\n");
+        exit(EXIT_FAILURE);
+    }
     int server_socket, client_socket;
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_addr_len = sizeof(client_addr);
-
+    int port = atoi(argv[1]);
     // Create socket
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket == -1)
@@ -396,7 +401,7 @@ int main()
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(POP_PORT);
+    server_addr.sin_port = htons(port);
 
     // Bind the socket to the specified address and port
     if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1)
